@@ -1,0 +1,56 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "gcc-preset",
+            "displayName": "GCC/G++",
+            "description": "Using GCC/G++",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/usr/bin/gcc",
+                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "mpi-preset",
+            "displayName": "MPIC++",
+            "description": "Using MPIC++ compiler for MPI",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/opt/ohpc/pub/mpi/openmpi4-gnu12/4.1.8/bin/mpicc",
+                "CMAKE_CXX_COMPILER": "/opt/ohpc/pub/mpi/openmpi4-gnu12/4.1.8/bin/mpic++",
+                "CMAKE_CXX_FLAGS": "-fopenmp -Wno-unused-result",
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_PREFIX_PATH": "/opt",
+                "CMAKE_LIBRARY_PATH": "/opt/rocm-7.1.0/lib/llvm/lib",
+                "HIP_ROOT": "/opt/rocm-7.1.0"
+            },
+            "environment": {
+                "OMPI_CXX": "/opt/rocm-7.1.0/bin/hipcc"
+            }
+        },
+        {
+            "name": "hip-preset",
+            "displayName": "HIPCC",
+            "description": "Using HIP compiler for GPU",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "/opt/rocm-7.1.0/bin/hipcc",
+                "CMAKE_CXX_COMPILER": "/opt/rocm-7.1.0/bin/hipcc",
+                "CMAKE_CXX_FLAGS": "-Wno-unused-result",
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "clean_build",
+            "configurePreset": "mpi-preset",
+            "cleanFirst": true
+        }
+    ]
+}
