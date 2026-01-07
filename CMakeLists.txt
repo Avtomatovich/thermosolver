@@ -11,8 +11,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Finds required packages
 find_package(OpenMP REQUIRED)
-find_package(MPI REQUIRED)
-find_package(HIP REQUIRED)
 
 # Allows you to include files from within those directories, without prefixing their filepaths
 include_directories(src)
@@ -20,18 +18,13 @@ include_directories(src)
 # Specifies .cpp and .h files to be passed to the compiler
 add_executable(main.exe 
     src/main.cpp
-
+    
     src/solver/solver.cpp 
     src/solver/grid.cpp
-    
+
     src/utils/utils.cpp
-    
-    src/gpu/gpu_func.cpp
 )
 
 target_link_libraries(main.exe PRIVATE
     OpenMP::OpenMP_CXX
-    MPI::MPI_CXX
-    hip::host
-    hip::device
 )

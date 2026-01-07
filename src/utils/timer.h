@@ -8,30 +8,19 @@
 
 #pragma once
 
-#include <hip/hip_runtime.h>
+#include <chrono>
+
+using namespace std::chrono;
 
 struct Timer {
-    hipEvent_t start_t, end_t;
-    
-    Timer() {
-        hipEventCreate(&start_t);
-        hipEventCreate(&end_t);
-    }
-
-    ~Timer() {
-        hipEventDestroy(start_t);
-        hipEventDestroy(end_t);
-    }
+    high_resolution_clock::time_point start_t, end_t;
 
     void start() {
-        hipEventRecord(start_t, 0); 
+        start_t = high_resolution_clock::now();
     }
 
     void end(double& time) {
-        float ms;
-        hipEventRecord(end_t, 0);
-        hipEventSynchronize(end_t);
-        hipEventElapsedTime(&ms, start_t, end_t);
-        time += ms * 1e-3; // ms -> sec
+        end_t = high_resolution_clock::now();
+        time += duration<double>(end_t - start_t).count();
     }
 };

@@ -26,16 +26,13 @@ public:
     void solve(bool log);
     
 private:
-    // vars
-    int N, nproc, proc;
+    int N;
     Method type;
     Grid grid;
     std::function<void(Grid&, double&)> step;
     Stats stats;
 
-    // funcs
     bool measure(bool log);
-    void debug(int i);
 
     static constexpr double TOL = 1e-6;
 };

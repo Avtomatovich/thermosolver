@@ -10,14 +10,11 @@
 
 #include <vector>
 #include <algorithm>
-#include <hip/hip_runtime.h>
 
 class Grid
 {
 public:
     Grid(int N);
-
-    ~Grid();
 
     void jacobi(double& t);
     void rbgs(double& t);
@@ -30,45 +27,23 @@ public:
     inline void swap() { std::swap(prev, curr); }
     inline void clear_prev() { prev.clear(); }
 
-    // debug
-    void print_rhs();
-    void print_soln();
-    void debug();
-
 private:
     // vars
-    int Ns, Nr, Nc;
+    int Ns, Nr, Nc, size;
     double dx, dx_2, recip_dx_2;
     std::vector<double> prev; // previous iteration to approx soln
     std::vector<double> curr; // current iteration to approx soln
     std::vector<double> rhs; // laplacian of soln to check against
     std::vector<double> soln; // exact soln to solve for
 
-    int nproc, proc, lproc, rproc, offset; // MPI vars
+    // relaxation factor for SOR method
+    static constexpr double omega = 1.9;
 
-    double *prev_d, *curr_d, *rhs_d, *soln_d, *red_d; // GPU vars
-
-    // GPU dim vars
-    dim3 grid_dim, block_dim;
-    int shared_bytes;
-    
     static constexpr double RECIP_6 = 1.0 / 6.0;
 
     // funcs
     void discretize();
     void dirichlet();
-    
-    void halo_swap(std::vector<double>& m);
-
-    void init_d();
-
-    void pprint(const std::vector<double>& m);
-
-    inline bool is_first() { return proc == 0; }
-    inline bool is_last() { return proc == nproc - 1; }
-
-    inline int get_start() { return is_first() ? 2 : 1; }
-    inline int get_end() { return is_last() ? Ns - 3 : Ns - 2; } 
 
     inline int idx(int i, int j, int k) {
         // i = slice, j = row, k = col
