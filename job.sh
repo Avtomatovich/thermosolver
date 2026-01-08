@@ -9,8 +9,8 @@
 
 # %J maps to jobId.stepId
 
-# args = method (Jacobi = 0, RBGS = 1, SOR = 2), grid size, log bool
-# if grid size < 5 or not multiple of 5, main uses default N range of [50, 200]
-./build/main.exe 2 100 0
+# args = grid size, log bool
+# grid size must be multiple of 5 and greater than 5
+./build/main.exe 100 1
 
 echo "OpenMP Thermosolver job completed."

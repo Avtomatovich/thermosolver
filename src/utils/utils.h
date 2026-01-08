@@ -17,8 +17,6 @@ namespace Utils {
     // NOTE: navigate out of build folder to find csv files
     const std::string solve_file = "./data/solve_data.csv";
     const std::string res_file = "./data/res_data.csv";
-    const std::string mae_file = "./data/mae_data.csv";
-    const std::string rmse_file = "./data/rmse_data.csv";
     const std::string conv_file = "./data/conv_data.csv";
 
     void write_file(const std::string& filename, 
@@ -35,15 +33,9 @@ namespace Utils {
 
     void res_stats(const Stats& stats);
 
-    void mae_stats(const Stats& stats);
-
-    void rmse_stats(const Stats& stats);
-
     inline void write_stats(const Stats& stats) {
         solve_stats(stats);
         res_stats(stats);
-        mae_stats(stats);
-        rmse_stats(stats);
     }
 
     void write_conv(const Stats& stats);

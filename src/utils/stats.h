@@ -9,7 +9,6 @@
 #pragma once
 
 #include <vector>
-#include <array>
 
 struct Stats {
     Stats(int dim) : 
@@ -19,15 +18,15 @@ struct Stats {
     // matrix dim
     int N;
 
-    // no of iterations per step
+    // inner and outer grid size
     int in_size, out_size;
 
     // time in seconds
-    double total_t, solve_t, res_t, mae_t, rmse_t;
+    double total_t, solve_t, res_t;
 
-    // no of iterations until convergence
+    // no of iterations until end of simulation
     int steps;
 
     // residuals and errors
-    std::vector<std::array<double, 3>> conv_data;
+    std::vector<double> conv_data;
 };

@@ -18,16 +18,14 @@ namespace Utils {
                     std::ios_base::openmode mode)
     {
         std::fstream file(filename, mode);
-        if (!file.is_open()) {
-            throw std::runtime_error("Failed to open: " + filename);
-        }
+        if (!file.is_open()) throw std::runtime_error("Failed to open: " + filename);
         file << line << std::endl;
         file.close();
     }
     
     void write_head() {
         std::string header = "size,steps,time,flop_rate,arithmetic_intensity,bandwidth";
-        for (const std::string& filename : {solve_file, res_file, mae_file, rmse_file}) {
+        for (const std::string& filename : {solve_file, res_file}) {
             write_file(filename, header, std::ios::out);
         }
     }
@@ -47,6 +45,7 @@ namespace Utils {
         write_file(file, row.str(), std::ios::app);
     }
 
+    // TODO: recompute bytes and flops
     void solve_stats(const Stats& stats) {
         double t = stats.solve_t;
         // bytes per step = 7 load + 1 write for 8 bytes each
@@ -58,6 +57,7 @@ namespace Utils {
 	    print_stats(solve_file, stats.N, stats.steps, t, bytes, flops);
     }
 
+    // TODO: recompute bytes and flops 
     void res_stats(const Stats& stats) {
         double t = stats.res_t;
         // bytes per step = 8 load for 8 bytes each
@@ -69,36 +69,13 @@ namespace Utils {
 	    print_stats(res_file, stats.N, stats.steps, t, bytes, flops);
     }
 
-    void mae_stats(const Stats& stats) {
-        double t = stats.mae_t;
-        // bytes per step = 2 load for 8 bytes each
-        double bytes = 2.0 * sizeof(double) * stats.out_size; // total bytes
-        // flops per step = 1 sub + 1 add
-        double flops = (1.0 + 1.0) * stats.out_size; // total flops
-
-        printf("* ==MAE Stats==\n");
-        print_stats(mae_file, stats.N, stats.steps, t, bytes, flops);
-    }
-
-    void rmse_stats(const Stats& stats) {
-        double t = stats.rmse_t;
-        // bytes per step = 2 load for 8 bytes each
-        double bytes = 2.0 * sizeof(double) * stats.out_size; // total bytes
-        // flops per step = 1 sub + 1 mul + 1 add
-        double flops = (1.0 + 1.0 + 1.0) * stats.out_size; // total flops
-
-        printf("* ==RMSE Stats==\n");
-        print_stats(rmse_file, stats.N, stats.steps, t, bytes, flops);
-    }
-
     void write_conv(const Stats& stats) {
         std::ofstream file(conv_file);
         if (!file.is_open()) throw std::runtime_error("Failed to open: " + conv_file);
 
-        file << "N,steps,residual,mae,rmse" << std::endl;
+        file << "N,steps,residual" << std::endl;
         for (int i = 0; i < stats.conv_data.size(); i++) {
-            const std::array<double, 3>& data = stats.conv_data[i];
-            file << stats.N << "," << i << "," << data[0] << "," << data[1] << "," << data[2] << std::endl;
+            file << stats.N << "," << i << "," << stats.conv_data[i] << std::endl;
         }
 
         file.close();

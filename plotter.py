@@ -14,7 +14,7 @@ def roof_line():
     # giga-bytes/sec * FLOPs/byte = GFLOPs/sec, clamp with peak FLOPs
     roofline = [min(peak_flops, peak_bw * ai) for ai in ai_range]
 
-    filenames = ['solve_data', 'res_data', 'mae_data', 'rmse_data']
+    filenames = ['solve_data', 'res_data']
 
     for filename in filenames:
         csv_filename = 'data/' + filename + '.csv'
@@ -42,33 +42,26 @@ def roof_line():
                 plt.savefig('plots/' + filename)
                 plt.clf()
 
-def res_err_plot():
+def res_plot():
     filename = 'conv_data'
     csv_filename = 'data/' + filename + '.csv'
     
     if os.path.isfile(csv_filename):
         with open(csv_filename, 'r') as csvfile:
-            steps, res, mae, rmse = [], [], [], []
+            steps, res = [], []
 
             reader = csv.DictReader(csvfile)
             for row in reader:
                 steps.append(int(row['steps']))
                 res.append(float(row['residual']))
-                mae.append(float(row['mae']))
-                rmse.append(float(row['rmse']))
             
             plt.xlabel('Iteration')
 
             plt.yscale('log')
-            plt.ylabel('Residual/Error')
+            plt.ylabel('Residual')
             
             # plot x=steps, y=residuals
-            plt.plot(steps, res, '-r', label='residual')
-            # plot x=steps, y=mae
-            plt.plot(steps, mae, '-g', label='mae')
-            # plot x=steps, y=rmse
-            plt.plot(steps, rmse, '-b', label='rmse')
-            plt.legend()
+            plt.plot(steps, res, '-r')
             
             plt.title(filename.replace('_', ' ').capitalize())
             plt.savefig('plots/' + filename)
@@ -78,4 +71,4 @@ def res_err_plot():
 
 if __name__ == "__main__":
     roof_line()
-    res_err_plot()
+    res_plot()
