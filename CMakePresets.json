@@ -49,7 +49,7 @@
     "buildPresets": [
         {
             "name": "clean_build",
-            "configurePreset": "mpi-preset",
+            "configurePreset": "gcc-preset",
             "cleanFirst": true
         }
     ]

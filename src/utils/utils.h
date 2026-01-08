@@ -26,7 +26,7 @@ namespace Utils {
     void write_head();
 
     // stats funcs
-    void print_stats(const std::string& file, int N, int steps, 
+    void print_stats(const std::string& file, const Stats& stats, 
                      double t, double bytes, double flops);
 
     void solve_stats(const Stats& stats);

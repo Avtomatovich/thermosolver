@@ -30,7 +30,7 @@ namespace Utils {
         }
     }
 
-    void print_stats(const std::string& file, int N, int steps, double t, double bytes, double flops) {
+    void print_stats(const std::string& file, const Stats& stats, double t, double bytes, double flops) {
         double ai = flops / bytes; // arithmetic intensity
         double bw = bytes * 1e-9 / t; // in GB/sec
         double fr = flops * 1e-9 / t; // in GFLOPS/sec
@@ -40,33 +40,33 @@ namespace Utils {
 	    printf("\t\t* Flop Rate: %g GF/s \n\t\t* Bandwidth: %g GB/s \n\t\t* AI: %g FLOPS/byte\n\n", fr, bw, ai);
         fflush(stdout);
 
-        std::stringstream row;
-        row << N << "," << steps << "," << t << "," << fr << "," << ai << "," << bw;
-        write_file(file, row.str(), std::ios::app);
+        if (stats.perf_log) {
+            std::stringstream row;
+            row << stats.N << "," << stats.steps << "," << t << "," << fr << "," << ai << "," << bw;
+            write_file(file, row.str(), std::ios::app);
+        }
     }
 
-    // TODO: recompute bytes and flops
     void solve_stats(const Stats& stats) {
         double t = stats.solve_t;
-        // bytes per step = 7 load + 1 write for 8 bytes each
-        double bytes = (7.0 + 1.0) * sizeof(double) * stats.in_size; // total bytes
-        // flops per step = 5 add + 1 sub + 2 mul
-        double flops = (5.0 + 1.0 + 2.0) * stats.in_size; // total flops
+        // bytes per step = 8 load + 1 write for 8 bytes each
+        double bytes = (8.0 + 1.0) * sizeof(double) * stats.in_size; // total bytes
+        // flops per step = 6 add + 1 sub + 4 mul
+        double flops = (6.0 + 1.0 + 4.0) * stats.in_size; // total flops
 
         printf("* ==Solver Stats==\n");
-	    print_stats(solve_file, stats.N, stats.steps, t, bytes, flops);
+	    print_stats(solve_file, stats, t, bytes, flops);
     }
 
-    // TODO: recompute bytes and flops 
     void res_stats(const Stats& stats) {
         double t = stats.res_t;
-        // bytes per step = 8 load for 8 bytes each
-        double bytes = 8.0 * sizeof(double) * stats.in_size; // total bytes
-        // flops per step = 5 add + 2 sub + 2 mul
-        double flops = (5.0 + 2.0 + 2.0) * stats.in_size; // total flops
+        // bytes per step = 2 load for 8 bytes each
+        double bytes = 2.0 * sizeof(double) * stats.out_size; // total bytes
+        // flops per step = 1 sub + 1 abs + 1 max
+        double flops = (1.0 + 1.0 + 1.0) * stats.out_size; // total flops
 
         printf("* ==Residual Stats==\n");
-	    print_stats(res_file, stats.N, stats.steps, t, bytes, flops);
+	    print_stats(res_file, stats, t, bytes, flops);
     }
 
     void write_conv(const Stats& stats) {

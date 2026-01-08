@@ -21,7 +21,7 @@ Grid::Grid(int N) :
     recip_dx_2 = 1.0 / dx_2;
 
     // compute time step based on FTCS stability condition
-    dt = 0.1 * dx_2 / (6.0 * alpha);
+    dt = 0.5 * dx_2 / (6.0 * ALPHA);
 
     prev.assign(size, 0.0);
     curr.assign(size, 0.0);
@@ -58,7 +58,7 @@ void Grid::step(double& t) {
         for (int j = 1; j <= Nr - 2; j++) {
             for (int k = 1; k <= Nc - 2; k++) {
                 int at = idx(i, j, k);
-                curr[at] = prev[at] + dt * alpha * laplacian(i, j, k);
+                curr[at] = prev[at] + dt * ALPHA * laplacian(i, j, k);
             }
         }
     }

@@ -28,11 +28,10 @@ private:
     double dx, dx_2, recip_dx_2, dt;
     std::vector<double> prev, curr; // iteration states
 
-    static constexpr double alpha = 2.3e-5; // thermal diffusivity for iron
+    static constexpr double ALPHA = 2.3e-5; // thermal diffusivity of iron
 
     // funcs
     void initialize();
-
 
     inline int idx(int i, int j, int k) {
         // i = slice, j = row, k = col

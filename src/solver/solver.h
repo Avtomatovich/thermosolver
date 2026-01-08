@@ -14,16 +14,14 @@
 class Solver
 {
 public:
-    Solver(int dim);
+    Solver(int dim, bool perf_log, bool conv_log);
 
-    void solve(bool log);
+    void solve();
     
 private:
     int N;
     Grid grid;
     Stats stats;
-
-    bool measure(bool log);
 
     static constexpr double TOL = 1e-6;
 };

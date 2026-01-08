@@ -12,30 +12,26 @@
 #include <cmath>
 #include <stdio.h>
 
-Solver::Solver(int dim) :
-    N(dim), stats(dim), grid(dim)
+#define MAX_ITER 10000
+
+Solver::Solver(int dim, bool perf_log, bool conv_log) :
+    N(dim), stats(dim, perf_log, conv_log), grid(dim)
 {}
 
-bool Solver::measure(bool log) {
-    double res = grid.residual(stats.res_t);
-
-    if (log) stats.conv_data.push_back(res);
-
-    return res < TOL;
-}
-
-void Solver::solve(bool log) {
+void Solver::solve() {
     Timer timer;
     timer.start(); /* TIMER START */
 
-    measure(log); // initial metrics
-
-    for (int i = 1; i <= 3 * N; i++) {
+    for (int i = 1; i <= MAX_ITER; i++) {
         stats.steps = i;
 
         grid.step(stats.solve_t);
+
+        double res = grid.residual(stats.res_t);
         
-        if (measure(log)) break;
+        if (stats.conv_log) stats.conv_data.push_back(res);
+
+        if (res < TOL) break;
 
         grid.swap();
     }
@@ -50,5 +46,5 @@ void Solver::solve(bool log) {
 
     // print results
     Utils::write_stats(stats);
-    if (log) Utils::write_conv(stats);
+    if (stats.conv_log) Utils::write_conv(stats);
 }

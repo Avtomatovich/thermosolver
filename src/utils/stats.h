@@ -11,8 +11,9 @@
 #include <vector>
 
 struct Stats {
-    Stats(int dim) : 
-        N(dim), in_size((N-2)*(N-2)*(N-2)), out_size(N*N*N)
+    Stats(int dim, bool plog, bool clog) : 
+        N(dim), in_size((N-2)*(N-2)*(N-2)), out_size(N*N*N), 
+        perf_log(plog), conv_log(clog)
     {}
 
     // matrix dim
@@ -29,4 +30,7 @@ struct Stats {
 
     // residuals and errors
     std::vector<double> conv_data;
+
+    // toggle performance logging
+    bool perf_log, conv_log;
 };
