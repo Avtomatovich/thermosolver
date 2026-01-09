@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <algorithm>
+#include "utils/stats.h"
 
 class Grid
 {
@@ -18,7 +19,7 @@ public:
 
     void step(double& t);
 
-    double residual(double& t);
+    Diag diagnostics(double& t);
 
     inline void swap() { std::swap(prev, curr); }
 

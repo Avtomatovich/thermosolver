@@ -14,7 +14,7 @@ def roof_line():
     # giga-bytes/sec * FLOPs/byte = GFLOPs/sec, clamp with peak FLOPs
     roofline = [min(peak_flops, peak_bw * ai) for ai in ai_range]
 
-    filenames = ['solve_data', 'res_data']
+    filenames = ['solve_data', 'diag_data']
 
     for filename in filenames:
         csv_filename = 'data/' + filename + '.csv'
@@ -43,7 +43,7 @@ def roof_line():
                 plt.clf()
 
 def res_plot():
-    filename = 'conv_data'
+    filename = 'diag_data'
     csv_filename = 'data/' + filename + '.csv'
     
     if os.path.isfile(csv_filename):

@@ -66,25 +66,29 @@ void Grid::step(double& t) {
     timer.end(t);
 }
 
-double Grid::residual(double& t) {
+Diag Grid::diagnostics(double& t) {
     Timer timer;
     timer.start();
     
-    double res = 0.0;
+    double res = 0.0, min_v = 1.0, max_v = 0.0, total = 0.0;
 
     // outer grid
-    #pragma omp parallel for reduction(max:res)
+    #pragma omp parallel for reduction(max: res, max_v) reduction(min: min_v) reduction(+: total)
     for (int i = 0; i <= Ns - 1; i++) {
         for (int j = 0; j <= Nr - 1; j++) {
             for (int k = 0; k <= Nc - 1; k++) {
-                // store max (residual = curr - prev)
                 int at = idx(i, j, k);
-                res = fmax(res, fabs(curr[at] - prev[at]));
+                double c = curr[at];
+
+                res = fmax(res, fabs(c - prev[at]));
+                min_v = fmin(min_v, c);
+                max_v = fmax(max_v, c);
+                total += c;
             }
         }
     }
 
     timer.end(t);
 
-    return res;
+    return Diag{res, min_v, max_v, total};
 }

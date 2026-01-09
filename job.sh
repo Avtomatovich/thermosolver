@@ -9,8 +9,8 @@
 
 # %J maps to jobId.stepId
 
-# args = grid size, performance log bool, convergence log bool
+# args = grid size, performance log bool
 # grid size must be multiple of 5 and greater than 5
-./build/main.exe 100 0 0
+./build/main.exe 100 0
 
 echo "OpenMP Thermosolver job complete."

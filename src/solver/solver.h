@@ -14,7 +14,7 @@
 class Solver
 {
 public:
-    Solver(int dim, bool perf_log, bool conv_log);
+    Solver(int dim, bool perf_log);
 
     void solve();
     

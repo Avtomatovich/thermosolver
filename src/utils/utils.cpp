@@ -25,7 +25,7 @@ namespace Utils {
     
     void write_head() {
         std::string header = "size,steps,time,flop_rate,arithmetic_intensity,bandwidth";
-        for (const std::string& filename : {solve_file, res_file}) {
+        for (const std::string& filename : {solve_file, diag_file}) {
             write_file(filename, header, std::ios::out);
         }
     }
@@ -58,24 +58,25 @@ namespace Utils {
 	    print_stats(solve_file, stats, t, bytes, flops);
     }
 
-    void res_stats(const Stats& stats) {
-        double t = stats.res_t;
+    void diag_stats(const Stats& stats) {
+        double t = stats.diag_t;
         // bytes per step = 2 load for 8 bytes each
         double bytes = 2.0 * sizeof(double) * stats.out_size; // total bytes
-        // flops per step = 1 sub + 1 abs + 1 max
-        double flops = (1.0 + 1.0 + 1.0) * stats.out_size; // total flops
+        // flops per step = 1 sub + 1 abs + 2 max + 1 min + 1 add
+        double flops = (1.0 + 1.0 + 2.0 + 1.0 + 1.0) * stats.out_size; // total flops
 
-        printf("* ==Residual Stats==\n");
-	    print_stats(res_file, stats, t, bytes, flops);
+        printf("* ==Diagnostic Stats==\n");
+	    print_stats(diag_file, stats, t, bytes, flops);
     }
 
-    void write_conv(const Stats& stats) {
-        std::ofstream file(conv_file);
-        if (!file.is_open()) throw std::runtime_error("Failed to open: " + conv_file);
+    void write_diag(const Stats& stats) {
+        std::ofstream file(diag_file);
+        if (!file.is_open()) throw std::runtime_error("Failed to open: " + diag_file);
 
-        file << "N,steps,residual" << std::endl;
-        for (int i = 0; i < stats.conv_data.size(); i++) {
-            file << stats.N << "," << i << "," << stats.conv_data[i] << std::endl;
+        file << "N,steps,residual,min,max,total" << std::endl;
+        for (int i = 0; i < stats.diag_data.size(); i++) {
+            const Diag& diag = stats.diag_data[i];
+            file << stats.N << "," << i << "," << diag.res << "," << diag.min << "," << diag.max << "," << diag.total << std::endl;
         }
 
         file.close();

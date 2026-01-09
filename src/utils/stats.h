@@ -10,10 +10,13 @@
 
 #include <vector>
 
+struct Diag {
+    double res, min, max, total;
+};
+
 struct Stats {
-    Stats(int dim, bool plog, bool clog) : 
-        N(dim), in_size((N-2)*(N-2)*(N-2)), out_size(N*N*N), 
-        perf_log(plog), conv_log(clog)
+    Stats(int dim, bool plog) : 
+        N(dim), in_size((N-2)*(N-2)*(N-2)), out_size(N*N*N), perf_log(plog)
     {}
 
     // matrix dim
@@ -23,14 +26,14 @@ struct Stats {
     int in_size, out_size;
 
     // time in seconds
-    double total_t, solve_t, res_t;
+    double total_t, solve_t, diag_t;
 
     // no of iterations until end of simulation
     int steps;
 
-    // residuals and errors
-    std::vector<double> conv_data;
+    // diagnostic data
+    std::vector<Diag> diag_data;
 
     // toggle performance logging
-    bool perf_log, conv_log;
+    bool perf_log;
 };
