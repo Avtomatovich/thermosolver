@@ -73,10 +73,10 @@ namespace Utils {
         std::ofstream file(diag_file);
         if (!file.is_open()) throw std::runtime_error("Failed to open: " + diag_file);
 
-        file << "N,steps,residual,min,max,total" << std::endl;
+        file << "N,steps,min,max,total" << std::endl;
         for (int i = 0; i < stats.diag_data.size(); i++) {
             const Diag& diag = stats.diag_data[i];
-            file << stats.N << "," << i << "," << diag.res << "," << diag.min << "," << diag.max << "," << diag.total << std::endl;
+            file << stats.N << "," << i << "," << diag.min << "," << diag.max << "," << diag.total << std::endl;
         }
 
         file.close();

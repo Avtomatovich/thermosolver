@@ -34,7 +34,7 @@ namespace Utils {
 
     inline void write_stats(const Stats& stats) {
         solve_stats(stats);
-        diag_stats(stats);
+        if (stats.diag_log) diag_stats(stats);
     }
 
     void write_diag(const Stats& stats);

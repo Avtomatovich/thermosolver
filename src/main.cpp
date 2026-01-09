@@ -17,6 +17,7 @@
  * Arguments: 
  *      argv[1] = Grid size (must be >= 5 and multiple of 5)
  *      argv[2] = Toggles performance logging (0 for false, any non-zero integer for true)
+ *      argv[3] = Toggles diagnostics logging (0 for false, any non-zero integer for true)
  *
  * @param argc Number of arguments
  * @param argv Array of string arguments
@@ -24,7 +25,7 @@
  */
 int main(int argc, char* argv[]) {
     try {
-        if (argc != 3) throw std::invalid_argument("Insufficient arguments.");
+        if (argc != 4) throw std::invalid_argument("Insufficient arguments.");
 
         // init grid size
         int dim = std::stoi(argv[1]);
@@ -32,10 +33,11 @@ int main(int argc, char* argv[]) {
 
         // toggle logging
         bool perf_log = std::stoi(argv[2]);
+        bool diag_log = std::stoi(argv[3]);
 
         if (perf_log) Utils::write_head();
 
-        Solver{dim, perf_log}.solve();
+        Solver{dim, perf_log, diag_log}.solve();
 
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;

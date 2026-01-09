@@ -42,33 +42,31 @@ def roof_line():
                 plt.savefig('plots/' + filename)
                 plt.clf()
 
-def res_plot():
+def energy_plot():
     filename = 'diag_data'
     csv_filename = 'data/' + filename + '.csv'
     
     if os.path.isfile(csv_filename):
         with open(csv_filename, 'r') as csvfile:
-            steps, res = [], []
+            time, heat = [], []
 
             reader = csv.DictReader(csvfile)
             for row in reader:
-                steps.append(int(row['steps']))
-                res.append(float(row['residual']))
+                time.append(int(row['steps']))
+                heat.append(float(row['total']))
             
-            plt.xlabel('Iteration')
-
-            plt.yscale('log')
-            plt.ylabel('Residual')
+            plt.xlabel('Time')
+            plt.ylabel('Energy')
             
-            # plot x=steps, y=residuals
-            plt.plot(steps, res, '-r')
+            # plot x=steps, y=energy
+            plt.plot(time, heat, '-r')
             
-            plt.title(filename.replace('_', ' ').capitalize())
-            plt.savefig('plots/' + filename)
+            plt.title('Heat Diffusion')
+            plt.savefig('plots/energy_plot')
             plt.clf()
     else:
         print(f'{csv_filename} is not a file')
 
 if __name__ == "__main__":
     roof_line()
-    res_plot()
+    energy_plot()

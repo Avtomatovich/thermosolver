@@ -14,8 +14,8 @@
 
 #define MAX_ITER 10000
 
-Solver::Solver(int dim, bool perf_log) :
-    N(dim), stats(dim, perf_log), grid(dim)
+Solver::Solver(int dim, bool perf_log, bool diag_log) :
+    N(dim), stats(dim, perf_log, diag_log), grid(dim)
 {}
 
 void Solver::solve() {
@@ -27,11 +27,9 @@ void Solver::solve() {
 
         grid.step(stats.solve_t);
 
-        Diag diag = grid.diagnostics(stats.diag_t);
-        
-        stats.diag_data.push_back(diag);
-
-        if (diag.res < TOL) break;
+        if (stats.diag_log) {
+            stats.diag_data.push_back(grid.diagnostics(stats.diag_t));
+        }
 
         grid.swap();
     }
@@ -46,5 +44,5 @@ void Solver::solve() {
 
     // print results
     Utils::write_stats(stats);
-    Utils::write_diag(stats);
+    if (stats.diag_log) Utils::write_diag(stats);
 }

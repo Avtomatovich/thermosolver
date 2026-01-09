@@ -1,0 +1,15 @@
+||==============================================================||
+||=================== Heat Equation Solver =====================||
+* No of time steps: 10000, Size: 100 x 100 x 100
+* Duration: 1.48582 sec
+* ==Solver Stats==
+		* Time: 1.4851 sec 
+		* FLOPS: 1e+07 flops 
+		* Memory: 7e+07 bytes
+	* ==Results==
+		* Flop Rate: 0.00697131 GF/s 
+		* Bandwidth: 0.0456304 GB/s 
+		* AI: 0.152778 FLOPS/byte
+
+Execution complete.
+OpenMP Thermosolver job complete.

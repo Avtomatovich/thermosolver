@@ -21,7 +21,7 @@ Grid::Grid(int N) :
     recip_dx_2 = 1.0 / dx_2;
 
     // compute time step based on FTCS stability condition
-    dt = 0.5 * dx_2 / (6.0 * ALPHA);
+    dt = 0.75 * dx_2 / (6.0 * ALPHA);
 
     prev.assign(size, 0.0);
     curr.assign(size, 0.0);
@@ -70,17 +70,16 @@ Diag Grid::diagnostics(double& t) {
     Timer timer;
     timer.start();
     
-    double res = 0.0, min_v = 1.0, max_v = 0.0, total = 0.0;
+    double min_v = 1.0, max_v = 0.0, total = 0.0;
 
     // outer grid
-    #pragma omp parallel for reduction(max: res, max_v) reduction(min: min_v) reduction(+: total)
+    #pragma omp parallel for reduction(min: min_v) reduction(max: max_v) reduction(+: total)
     for (int i = 0; i <= Ns - 1; i++) {
         for (int j = 0; j <= Nr - 1; j++) {
             for (int k = 0; k <= Nc - 1; k++) {
                 int at = idx(i, j, k);
                 double c = curr[at];
 
-                res = fmax(res, fabs(c - prev[at]));
                 min_v = fmin(min_v, c);
                 max_v = fmax(max_v, c);
                 total += c;
@@ -90,5 +89,5 @@ Diag Grid::diagnostics(double& t) {
 
     timer.end(t);
 
-    return Diag{res, min_v, max_v, total};
+    return Diag{min_v, max_v, total};
 }
