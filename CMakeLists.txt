@@ -11,7 +11,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Finds required packages
 find_package(OpenMP REQUIRED)
-find_package(MPI REQUIRED)
 find_package(HIP REQUIRED)
 
 # Allows you to include files from within those directories, without prefixing their filepaths
@@ -31,7 +30,6 @@ add_executable(main.exe
 
 target_link_libraries(main.exe PRIVATE
     OpenMP::OpenMP_CXX
-    MPI::MPI_CXX
     hip::host
     hip::device
 )

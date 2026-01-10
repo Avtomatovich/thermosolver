@@ -11,9 +11,6 @@
 
 namespace GPUFunc {
 
-    // relaxation factor for SOR method
-    static __device__ constexpr double omega = 1.8;
-
     static __device__ constexpr double RECIP_6 = 1.0 / 6.0;
 
     static inline __device__ int idx(int i, int j, int k, int Nr, int Nc) {
@@ -44,23 +41,10 @@ namespace GPUFunc {
         hipMemcpy(dst, src, sizeof(double), hipMemcpyDeviceToHost);
     }
 
-    __global__ void jacobi_kernel(double* prev_d, double* curr_d, double* rhs_d,
-                                  int Nr, int Nc, double dx_2, 
-                                  int start, int end);
+    __global__ void rbgs_kernel(double* curr_d, double* prev_d,
+                                int Ns, int Nr, int Nc, double dx_2, bool parity);
 
-    __global__ void rbgs_kernel(double* curr_d, double* rhs_d,
-                                int Nr, int Nc, double dx_2, 
-                                int start, int end, int offset, bool parity);
-
-    __global__ void sor_kernel(double* curr_d, double* rhs_d,
-                                int Nr, int Nc, double dx_2, 
-                                int start, int end, int offset, bool parity);
-
-    __global__ void res_kernel(double* curr_d, double* rhs_d,
-                                int Nr, int Nc, double recip_dx_2,
-                                int start, int end, double* res_d);
-    
-    __global__ void err_kernel(double* curr_d, double* soln_d,
-                                int Ns, int Nr, int Nc, bool sq, double* err_d);
+    __global__ void res_kernel(double* curr_d, double* prev_d,
+                                int Ns, int Nr, int Nc, double recip_dx_2, double* res_d);
 
 }

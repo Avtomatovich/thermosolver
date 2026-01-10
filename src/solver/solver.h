@@ -9,33 +9,21 @@
 #pragma once
 
 #include <functional>
+#include "utils/method.h"
 #include "utils/stats.h"
 #include "grid.h"
-
-enum class Method {
-    JACOBI,
-    RBGS,
-    SOR
-};
 
 class Solver
 {
 public:
-    Solver(int dim, Method method);
+    Solver(int dim, Method method, bool diag_log, bool perf_log);
 
-    void solve(bool log);
+    void solve(int nsteps);
     
 private:
-    // vars
-    int N, nproc, proc;
+    int N;
     Method type;
     Grid grid;
-    std::function<void(Grid&, double&)> step;
     Stats stats;
-
-    // funcs
-    bool measure(bool log);
-    void debug(int i);
-
-    static constexpr double TOL = 1e-6;
+    std::function<void(Grid&, double&)> step;
 };
