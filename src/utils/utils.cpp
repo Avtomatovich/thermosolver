@@ -47,12 +47,24 @@ namespace Utils {
         }
     }
 
-    void solve_stats(const Stats& stats) {
+    void solve_stats(const Stats& stats, Method method) {
         double t = stats.solve_t;
-        // bytes per step = 8 load + 1 write for 8 bytes each
-        double bytes = (8.0 + 1.0) * sizeof(double) * stats.in_size; // total bytes
-        // flops per step = 6 add + 1 sub + 4 mul
-        double flops = (6.0 + 1.0 + 4.0) * stats.in_size; // total flops
+        
+        double bytes, flops;
+        switch (method) {
+            case Method::FTCS:
+                // bytes per step = 7 load + 1 write for 8 bytes each
+                bytes = (7.0 + 1.0) * sizeof(double) * stats.in_size; // total bytes
+                // flops per step = 2 mul + 6 add
+                flops = (2.0 + 6.0) * stats.in_size; // total flops
+                break;
+            case Method::CN:
+                // bytes per step = 14 load + 1 write for 8 bytes each
+                bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size; // total bytes
+                // flops per step = 13 add + 4 mul + 2 sub + 1 max + 1 abs
+                flops = (13.0 + 4.0 + 2.0 + 1.0 + 1.0) * stats.in_size; // total flops
+                break;
+        }
 
         printf("* ==Solver Stats==\n");
 	    print_stats(solve_file, stats, t, bytes, flops);

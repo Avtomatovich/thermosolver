@@ -11,6 +11,7 @@
 #include <string>
 #include <iostream>
 #include "stats.h"
+#include "method.h"
 
 namespace Utils {
 
@@ -28,12 +29,12 @@ namespace Utils {
     void print_stats(const std::string& file, const Stats& stats, 
                      double t, double bytes, double flops);
 
-    void solve_stats(const Stats& stats);
+    void solve_stats(const Stats& stats, Method method);
 
     void diag_stats(const Stats& stats);
 
-    inline void write_stats(const Stats& stats) {
-        solve_stats(stats);
+    inline void write_stats(const Stats& stats, Method method) {
+        solve_stats(stats, method);
         if (stats.diag_log) diag_stats(stats);
     }
 

@@ -9,8 +9,11 @@
 
 # %J maps to jobId.stepId
 
-# args = grid size, performance log bool, diagnostics log bool
-# grid size must be multiple of 5 and greater than 5
-./build/main.exe 100 1 0
+# args = 
+#  Solver method (0 = FTCS, 1 = CN),
+#  Grid size (must be >= 5 and multiple of 5),
+#  Performance logging (optional, 0 = false, non-zero int = true),
+#  Diagnostics logging (optional, 0 = false, non-zero int = true)
+./build/main.exe 0 100
 
 echo "OpenMP Thermosolver job complete."

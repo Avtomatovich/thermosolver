@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <cmath>
 #include "utils/stats.h"
 
 class Grid
@@ -17,7 +18,8 @@ class Grid
 public:
     Grid(int N);
 
-    void step(double& t);
+    void ftcs(double& t);
+    void cn(double& t);
 
     Diag diagnostics(double& t);
 
@@ -26,13 +28,18 @@ public:
 private:
     // vars
     int Ns, Nr, Nc, size;
-    double dx, dx_2, recip_dx_2, dt;
+    double dx, dx_2, recip_dx_2, dt; // step sizes
+    double r, r_half; // Courant number
+    double ftcs_coeff, cn_coeff; // prev update coefficients
+    double recip_denom; // Crank-Nicolson update denominator reciprocal
     std::vector<double> prev, curr; // iteration states
 
     static constexpr double ALPHA = 2.3e-5; // thermal diffusivity of iron
+    static constexpr double OMEGA = 1.8; // SOR relaxation factor
+    static constexpr double TOL = 1e-5; // convergence tolerance condition
 
     // funcs
-    void initialize();
+    void init();
 
     inline int idx(int i, int j, int k) {
         // i = slice, j = row, k = col
@@ -40,10 +47,15 @@ private:
         return i * Nr * Nc + j * Nc + k;
     }
 
-    inline double laplacian(int i, int j, int k) {
-        return (prev[idx(i - 1, j, k)] + prev[idx(i + 1, j, k)] + 
-                prev[idx(i, j - 1, k)] + prev[idx(i, j + 1, k)] + 
-                prev[idx(i, j, k - 1)] + prev[idx(i, j, k + 1)] -
-                6.0 * prev[idx(i, j, k)]) * recip_dx_2;
+    inline double neighbors(const std::vector<double>& m, int i, int j, int k) {
+        return  m[idx(i - 1, j, k)] + m[idx(i + 1, j, k)] + 
+                m[idx(i, j - 1, k)] + m[idx(i, j + 1, k)] + 
+                m[idx(i, j, k - 1)] + m[idx(i, j, k + 1)];
+    }
+
+    inline double cn_update(int at, int i, int j, int k) {
+        return  cn_coeff * prev[at] + 
+                r_half * (neighbors(prev, i, j, k) + neighbors(curr, i, j, k)) * 
+                recip_denom;
     }
 };

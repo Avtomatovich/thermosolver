@@ -8,20 +8,22 @@
 
 #pragma once
 
+#include <functional>
+#include "utils/method.h"
 #include "utils/stats.h"
 #include "grid.h"
 
 class Solver
 {
 public:
-    Solver(int dim, bool perf_log, bool diag_log);
+    Solver(int dim, Method method, bool perf_log, bool diag_log);
 
     void solve();
     
 private:
     int N;
+    Method type;
     Grid grid;
     Stats stats;
-
-    static constexpr double TOL = 1e-6;
+    std::function<void(Grid&, double&)> step;
 };
