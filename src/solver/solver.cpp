@@ -14,8 +14,8 @@
 
 #define MAX_STEPS 10000
 
-Solver::Solver(int dim, Method method, bool perf_log, bool diag_log) :
-    N(dim), type(method), grid(dim), stats(dim, perf_log, diag_log),
+Solver::Solver(int dim, Method method, bool diag_log, bool perf_log) :
+    N(dim), type(method), grid(dim), stats(dim, diag_log, perf_log),
     step(type == Method::FTCS ? &Grid::ftcs : &Grid::cn)
 {}
 
@@ -52,6 +52,6 @@ void Solver::solve() {
     fflush(stdout);
 
     // print results
-    Utils::write_stats(stats, type);
     if (stats.diag_log) Utils::write_diag(stats);
+    Utils::write_stats(stats, type);
 }

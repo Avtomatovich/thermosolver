@@ -12,8 +12,8 @@
 # args = 
 #  Solver method (0 = FTCS, 1 = CN),
 #  Grid size (must be >= 5 and multiple of 5),
-#  Performance logging (optional, 0 = false, non-zero int = true),
-#  Diagnostics logging (optional, 0 = false, non-zero int = true)
+#  Diagnostics logging (optional, 0 = false, non-zero int = true),
+#  Performance logging (optional, 0 = false, non-zero int = true)
 ./build/main.exe 0 100
 
 echo "OpenMP Thermosolver job complete."

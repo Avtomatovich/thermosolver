@@ -15,9 +15,9 @@ struct Diag {
 };
 
 struct Stats {
-    Stats(int dim, bool plog, bool dlog) : 
+    Stats(int dim, bool dlog, bool plog) : 
         N(dim), in_size((N-2)*(N-2)*(N-2)), out_size(N*N*N), 
-        perf_log(plog), diag_log(dlog)
+        diag_log(dlog), perf_log(plog)
     {}
 
     // matrix dim
@@ -30,7 +30,7 @@ struct Stats {
     double total_t, solve_t, diag_t;
 
     // toggle performance logging
-    bool perf_log, diag_log;
+    bool diag_log, perf_log;
 
     // no of iterations until end of simulation
     int steps;
