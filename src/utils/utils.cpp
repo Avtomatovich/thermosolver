@@ -61,8 +61,8 @@ namespace Utils {
             case Method::CN:
                 // bytes per step = 14 load + 1 write for 8 bytes each
                 bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size; // total bytes
-                // flops per step = 13 add + 4 mul + 2 sub + 1 max + 1 abs
-                flops = (13.0 + 4.0 + 2.0 + 1.0 + 1.0) * stats.in_size; // total flops
+                // flops per step = 12 add + 3 mul + 1 sub + 1 max + 1 abs
+                flops = (12.0 + 3.0 + 1.0 + 1.0 + 1.0) * stats.in_size; // total flops
                 break;
         }
 

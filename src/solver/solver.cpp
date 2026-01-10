@@ -12,14 +12,12 @@
 #include <cmath>
 #include <stdio.h>
 
-#define MAX_STEPS 10000
-
 Solver::Solver(int dim, Method method, bool diag_log, bool perf_log) :
     N(dim), type(method), grid(dim), stats(dim, diag_log, perf_log),
     step(type == Method::FTCS ? &Grid::ftcs : &Grid::cn)
 {}
 
-void Solver::solve() {
+void Solver::solve(int nsteps) {
     Timer timer;
     timer.start(); /* TIMER START */
 
@@ -27,9 +25,9 @@ void Solver::solve() {
         stats.diag_data.push_back(grid.diagnostics(stats.diag_t));
     }
 
-    for (int i = 1; i <= MAX_STEPS; i++) {
-        stats.steps = i;
+    stats.steps = nsteps;
 
+    for (int i = 1; i <= nsteps; i++) {
         step(grid, stats.solve_t);
 
         if (stats.diag_log) {

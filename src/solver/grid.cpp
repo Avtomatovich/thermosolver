@@ -27,7 +27,7 @@ Grid::Grid(int N) :
 
     // Courant number
     r = ALPHA * dt * recip_dx_2;
-    r_half = 0.5 * r;
+    r_half = 0.5 * ALPHA * 2.0 * dt * recip_dx_2;
 
     // miscellaneous constants
     ftcs_coeff = 1.0 - 6.0 * r;
@@ -84,7 +84,7 @@ void Grid::cn(double& t) {
     for (int s = 1; s <= MAX_ITER; s++) {
         double res = 0.0;
 
-        // RBGS + SOR
+        // RBGS
         // inner grid only
         #pragma omp parallel for reduction(max:res)
         for (int i = 1; i <= Ns - 2; i++) {
@@ -94,7 +94,7 @@ void Grid::cn(double& t) {
                     if (!(i + j + k & 1)) {
                         int at = idx(i, j, k);
                         double c = curr[at];
-                        double u = c + OMEGA * (cn_update(at, i, j, k) - c);
+                        double u = cn_update(at, i, j, k);
                         curr[at] = u;
                         res = fmax(res, fabs(u - c));
                     }
@@ -110,7 +110,7 @@ void Grid::cn(double& t) {
                     if (i + j + k & 1) {
                         int at = idx(i, j, k);
                         double c = curr[at];
-                        double u = c + OMEGA * (cn_update(at, i, j, k) - c);
+                        double u = cn_update(at, i, j, k);
                         curr[at] = u;
                         res = fmax(res, fabs(u - c));
                     }

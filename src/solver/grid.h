@@ -35,7 +35,6 @@ private:
     std::vector<double> prev, curr; // iteration states
 
     static constexpr double ALPHA = 2.3e-5; // thermal diffusivity of iron
-    static constexpr double OMEGA = 1.0; // SOR relaxation factor
     static constexpr double TOL = 1e-5; // convergence tolerance factor
 
     // funcs

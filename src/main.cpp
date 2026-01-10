@@ -19,8 +19,9 @@
  *          0 = Forward Time-Centered Space (FTCS)
  *          1 = Crank-Nicolson (CN)
  *      argv[2] = Grid size (must be >= 5 and multiple of 5)
- *      argv[3] = Toggles diagnostics logging (optional, 0 for false, any non-zero integer for true)
- *      argv[4] = Toggles performance logging (optional, 0 for false, any non-zero integer for true)
+ *      argv[3] = Number of time steps (must be > 0)
+ *      argv[4] = Toggles diagnostics logging (optional, 0 for false, any non-zero integer for true)
+ *      argv[5] = Toggles performance logging (optional, 0 for false, any non-zero integer for true)
  *
  * @param argc Number of arguments
  * @param argv Array of string arguments
@@ -28,26 +29,30 @@
  */
 int main(int argc, char* argv[]) {
     try {
-        if (argc < 3) throw std::invalid_argument("Insufficient arguments.");
+        if (argc < 4) throw std::invalid_argument("Insufficient arguments.");
 
-        // init method
+        // solver method
         int type = std::stoi(argv[1]);
         if (type < 0 || type > 1) throw std::invalid_argument("Invalid method.");
         Method method = static_cast<Method>(type);
 
-        // init grid size
+        // grid size
         int dim = std::stoi(argv[2]);
         if (dim < 5 || dim % 5 != 0) throw std::invalid_argument("Invalid grid size.");
 
+        // time steps
+        int nsteps = std::stoi(argv[3]);
+        if (nsteps < 1) throw std::invalid_argument("Invalid number of time steps.");
+
         bool perf_log = false, diag_log = false;
-        // handle diagnostics toggle if 4 args present
-        if (argc == 4) diag_log = std::stoi(argv[3]);
-        // handle performance toggle if 5 args present
-        if (argc == 5) perf_log = std::stoi(argv[4]);
+        // parse diagnostics toggle if 5 args present
+        if (argc == 5) diag_log = std::stoi(argv[4]);
+        // parse performance toggle if 6 args present
+        if (argc == 6) perf_log = std::stoi(argv[5]);
 
         if (perf_log) Utils::write_head();
 
-        Solver{dim, method, diag_log, perf_log}.solve();
+        Solver{dim, method, diag_log, perf_log}.solve(nsteps);
 
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << std::endl;

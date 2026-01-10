@@ -18,7 +18,7 @@ class Solver
 public:
     Solver(int dim, Method method, bool diag_log, bool perf_log);
 
-    void solve();
+    void solve(int nsteps);
     
 private:
     int N;
