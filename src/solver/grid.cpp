@@ -12,7 +12,7 @@
 #include "grid.h"
 #include "utils/timer.h"
 
-#define MAX_ITER 100000
+#define MAX_ITER 100
 
 Grid::Grid(int N) :
     Ns(N), Nr(N), Nc(N), size(Ns * Nr * Nc)

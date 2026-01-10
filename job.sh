@@ -14,6 +14,6 @@
 #  Grid size (must be >= 5 and multiple of 5),
 #  Diagnostics logging (optional, 0 = false, non-zero int = true),
 #  Performance logging (optional, 0 = false, non-zero int = true)
-./build/main.exe 0 100
+./build/main.exe 0 100 1
 
 echo "OpenMP Thermosolver job complete."

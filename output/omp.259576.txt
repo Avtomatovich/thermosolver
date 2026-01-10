@@ -1,0 +1,15 @@
+||================================================================||
+||============ Forward Time-Centered Space Heat Solver ===========||
+* No of time steps: 10000, Size: 100 x 100 x 100
+* Duration: 1.02884 sec
+* ==Solver Stats==
+		* Time: 1.02817 sec 
+		* FLOPS: 8e+06 flops 
+		* Memory: 6e+07 bytes
+	* ==Results==
+		* Flop Rate: 0.00732323 GF/s 
+		* Bandwidth: 0.0585859 GB/s 
+		* AI: 0.125 FLOPS/byte
+
+Execution complete.
+OpenMP Thermosolver job complete.
