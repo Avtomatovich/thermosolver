@@ -15,7 +15,7 @@
 #define MAX_ITER 100
 
 Grid::Grid(int N) :
-    Ns(N), Nr(N), Nc(N), size(Ns * Nr * Nc)
+    Ns(N), Nr(N), Nc(N)
 {
     // split [0, 1] domain into N parts, dx = dy = dz
     dx = 1.0 / (N - 1);
@@ -34,6 +34,7 @@ Grid::Grid(int N) :
     cn_coeff = 1.0 - 6.0 * r_half;
     recip_denom = 1.0 / (1.0 + 6.0 * r_half);
 
+    int size = Ns * Nr * Nc;
     prev.assign(size, 0.0);
     curr.assign(size, 0.0);
 

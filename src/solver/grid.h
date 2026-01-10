@@ -27,7 +27,7 @@ public:
 
 private:
     // vars
-    int Ns, Nr, Nc, size;
+    int Ns, Nr, Nc;
     double dx, dx_2, recip_dx_2, dt; // step sizes
     double r, r_half; // Courant number
     double ftcs_coeff, cn_coeff; // prev update coefficients
