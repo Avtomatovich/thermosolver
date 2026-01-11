@@ -26,7 +26,8 @@ public:
 
     Diag diagnostics(double& t);
 
-    inline void swap() { std::swap(prev, curr); }
+    // swap device pointers
+    inline void swap() { std::swap(prev_d, curr_d); }
 
     // debug
     void debug();
