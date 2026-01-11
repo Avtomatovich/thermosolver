@@ -17,4 +17,7 @@
 #  Performance logging (optional, 0 = false, non-zero int = true)
 ./build/main.exe 1 100 1000
 
+# Profiling command
+# rocprofv3 --kernel-trace --memory-copy-trace --output-format pftrace -- ./build/main.exe 1 100 1000
+
 echo "HIP Thermosolver job complete."

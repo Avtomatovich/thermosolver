@@ -1,1 +1,1 @@
-rocprofv3 --kernel-trace --memory-copy-trace --output-format pftrace --marker-trace  -- ./build/main.exe 2 100 0
+rocprofv3 --kernel-trace --memory-copy-trace --output-format pftrace -- ./build/main.exe 1 100 1000

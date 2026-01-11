@@ -14,7 +14,7 @@ def roof_line():
     # giga-bytes/sec * FLOPs/byte = GFLOPs/sec, clamp with peak FLOPs
     roofline = [min(peak_flops, peak_bw * ai) for ai in ai_range]
 
-    filenames = ['solve_data', 'res_data', 'mae_data', 'rmse_data']
+    filenames = ['solve_data', 'diag_data']
 
     for filename in filenames:
         csv_filename = 'data/' + filename + '.csv'
@@ -42,40 +42,31 @@ def roof_line():
                 plt.savefig('plots/' + filename)
                 plt.clf()
 
-def res_err_plot():
-    filename = 'conv_data'
+def energy_plot():
+    filename = 'diag_data'
     csv_filename = 'data/' + filename + '.csv'
     
     if os.path.isfile(csv_filename):
         with open(csv_filename, 'r') as csvfile:
-            steps, res, mae, rmse = [], [], [], []
+            time, heat = [], []
 
             reader = csv.DictReader(csvfile)
             for row in reader:
-                steps.append(int(row['steps']))
-                res.append(float(row['residual']))
-                mae.append(float(row['mae']))
-                rmse.append(float(row['rmse']))
+                time.append(int(row['steps']))
+                heat.append(float(row['total']))
             
-            plt.xlabel('Iteration')
-
-            plt.yscale('log')
-            plt.ylabel('Residual/Error')
+            plt.xlabel('Time')
+            plt.ylabel('Energy')
             
-            # plot x=steps, y=residuals
-            plt.plot(steps, res, '-r', label='residual')
-            # plot x=steps, y=mae
-            plt.plot(steps, mae, '-g', label='mae')
-            # plot x=steps, y=rmse
-            plt.plot(steps, rmse, '-b', label='rmse')
-            plt.legend()
+            # plot x=steps, y=energy
+            plt.plot(time, heat, '-r')
             
-            plt.title(filename.replace('_', ' ').capitalize())
-            plt.savefig('plots/' + filename)
+            plt.title('Heat Diffusion')
+            plt.savefig('plots/energy_plot')
             plt.clf()
     else:
         print(f'{csv_filename} is not a file')
 
 if __name__ == "__main__":
     roof_line()
-    res_err_plot()
+    energy_plot()
