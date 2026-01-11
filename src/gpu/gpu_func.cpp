@@ -10,7 +10,7 @@
 
 namespace GPUFunc {
 
-    __global__ void ftcs_kernel(double* curr_d, double* prev_d,
+    __global__ void ftcs_kernel(double* __restrict__ curr_d, const double* __restrict__ prev_d,
                                 int Ns, int Nr, int Nc, double ftcs_coeff, double r)
     {
         int i = blockIdx.z * blockDim.z + threadIdx.z;
@@ -25,8 +25,8 @@ namespace GPUFunc {
         curr_d[at] = ftcs_coeff * prev_d[at] + r * neighbors(prev_d, i, j, k, Nr, Nc);
     }
 
-    __global__ void cn_kernel(double* curr_d, double* prev_d,
-                              double* res_d, int Ns, int Nr, int Nc, 
+    __global__ void cn_kernel(double* __restrict__ curr_d, const double* __restrict__ prev_d,
+                              double* __restrict__ res_d, int Ns, int Nr, int Nc, 
                               double cn_coeff, double r_half, double recip_denom, bool parity)
     { 
         extern __shared__ double max_arr[];
@@ -72,8 +72,9 @@ namespace GPUFunc {
         }
     }
 
-    __global__ void diag_kernel(double* curr_d, int Ns, int Nr, int Nc,
-                                double* min_d, double* max_d, double* total_d)
+    __global__ void diag_kernel(const double* __restrict__ curr_d, double* __restrict__ min_d, 
+                                double* __restrict__ max_d, double* __restrict__ total_d,
+                                int Ns, int Nr, int Nc)
     {
         extern __shared__ double red_arr[];
         
@@ -91,6 +92,7 @@ namespace GPUFunc {
         int k = blockIdx.x * blockDim.x + threadIdx.x;
 
         double thread_min = 1.0, thread_max = 0.0, thread_sum = 0.0;
+        // outer grid
         if (i >= 0 && i <= Ns - 1 && j >= 0 && j <= Nr - 1 && k >= 0 && k <= Nc - 1) {
             thread_min = thread_max = thread_sum = curr_d[idx(i, j, k, Nr, Nc)];
         }

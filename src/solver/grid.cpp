@@ -31,7 +31,10 @@ Grid::Grid(int N) :
 
     // Courant number
     r = ALPHA * dt * recip_dx_2;
-    r_half = 0.5 * ALPHA * 2.0 * dt * recip_dx_2;
+    r_half = 0.5 * r;
+
+    // TODO: test different dt values
+    // r_half *= 2.0;
 
     // miscellaneous constants
     ftcs_coeff = 1.0 - 6.0 * r;
@@ -112,7 +115,10 @@ void Grid::cn(double& t) {
     timer.start();
 
     for (int s = 1; s <= MAX_ITER; s++) {
-        double res = 0.0;
+        double res_h = 0.0;
+
+        // copy initial val to device
+        to_device(&res_h, res_d);
 
         // RBGS
         cn_kernel<<<grid_dim, block_dim, shared_bytes>>>(curr_d, prev_d, res_d, Ns, Nr, Nc, 
@@ -123,11 +129,12 @@ void Grid::cn(double& t) {
                                                          cn_coeff, r_half, recip_denom, true);
         hipDeviceSynchronize();
 
-        to_host(res_d, &res);
+        // copy result to host
+        to_host(res_d, &res_h);
 
-        if (res < TOL) break;
+        if (res_h < TOL) break;
 
-        if (s == MAX_ITER) std::cerr << "CN did not converge at residual: " << res << std::endl;
+        if (s == MAX_ITER) std::cerr << "CN did not converge at residual: " << res_h << std::endl;
     }
 
     timer.end(t);
@@ -136,21 +143,27 @@ void Grid::cn(double& t) {
 Diag Grid::diagnostics(double& t) {
     Timer timer;
     timer.start();
-    
-    double min_v = 1.0, max_v = 0.0, total = 0.0;
+
+    double min_h = 1.0, max_h = 0.0, total_h = 0.0;
+
+    // copy initial vals to device
+    to_device(&min_h, min_d);
+    to_device(&max_h, max_d);
+    to_device(&total_h, total_d);
 
     // NOTE: tripling shared memory array size for 3 reductions
-    diag_kernel<<<grid_dim, block_dim, shared_bytes * 3>>>(curr_d, Ns, Nr, Nc, 
-                                                           min_d, max_d, total_d);
+    diag_kernel<<<grid_dim, block_dim, shared_bytes * 3>>>(curr_d, min_d, max_d, total_d,
+                                                            Ns, Nr, Nc);
     hipDeviceSynchronize();
-
-    to_host(min_d, &min_v);
-    to_host(max_d, &max_v);
-    to_host(total_d, &total);
+    
+    // copy results to host
+    to_host(min_d, &min_h);
+    to_host(max_d, &max_h);
+    to_host(total_d, &total_h);
 
     timer.end(t);
 
-    return Diag{min_v, max_v, total};
+    return Diag{min_h, max_h, total_h};
 }
 
 void Grid::debug() {
