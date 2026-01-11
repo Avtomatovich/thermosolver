@@ -27,7 +27,10 @@ Grid::Grid(int N) :
 
     // Courant number
     r = ALPHA * dt * recip_dx_2;
-    r_half = 0.5 * ALPHA * 2.0 * dt * recip_dx_2;
+    r_half = 0.5 * r;
+
+    // TODO: test different dt values
+    // r_half *= 2.0;
 
     // miscellaneous constants
     ftcs_coeff = 1.0 - 6.0 * r;
