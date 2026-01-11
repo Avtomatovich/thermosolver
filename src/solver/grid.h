@@ -40,11 +40,10 @@ private:
     double recip_denom; // Crank-Nicolson update denominator reciprocal
     std::vector<double> prev, curr; // iteration states
 
-    double *prev_d, *curr_d, *res_d; // GPU vars
+    double *prev_d, *curr_d, *res_d, *min_d, *max_d, *total_d; // GPU vars
 
     // GPU dim vars
     dim3 grid_dim, block_dim;
-    int shared_bytes;
     
     static constexpr double ALPHA = 2.3e-5; // thermal diffusivity of iron
     static constexpr double TOL = 1e-5; // convergence tolerance factor

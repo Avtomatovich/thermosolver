@@ -53,6 +53,9 @@ Grid::~Grid() {
     hipFree(prev_d);
     hipFree(curr_d);
     hipFree(res_d);
+    hipFree(min_d);
+    hipFree(max_d);
+    hipFree(total_d);
 }
 
 void Grid::init() {
@@ -81,13 +84,14 @@ void Grid::init_d() {
         (Nr + block_dim.y - 1) / block_dim.y,
         (Ns + block_dim.z - 1) / block_dim.z  // slowest
     };
-    // array size of warp reduction partials (no of warps = no of threads per block / warp size)
-    shared_bytes = ((block_dim.x * block_dim.y * block_dim.z + WARP_SIZE - 1) / WARP_SIZE) * sizeof(double);
-
+    
     // NOTE: size in bytes
     hipMalloc(reinterpret_cast<void**>(&prev_d), Ns * Nr * Nc * sizeof(double));
     hipMalloc(reinterpret_cast<void**>(&curr_d), Ns * Nr * Nc * sizeof(double));
     hipMalloc(reinterpret_cast<void**>(&res_d), sizeof(double));
+    hipMalloc(reinterpret_cast<void**>(&min_d), sizeof(double));
+    hipMalloc(reinterpret_cast<void**>(&max_d), sizeof(double));
+    hipMalloc(reinterpret_cast<void**>(&total_d), sizeof(double));
 }
 
 void Grid::ftcs(double& t) {
@@ -108,14 +112,12 @@ void Grid::cn(double& t) {
         double res = 0.0;
 
         // RBGS
-        cn_kernel<<<grid_dim, block_dim, shared_bytes>>>(curr_d, prev_d, res_d, 
-                                                         Ns, Nr, Nc, 
-                                                         cn_coeff, r_half, recip_denom, false);
+        cn_kernel<<<grid_dim, block_dim>>>(curr_d, prev_d, res_d, Ns, Nr, Nc, 
+                                           cn_coeff, r_half, recip_denom, false);
         hipDeviceSynchronize();
         
-        cn_kernel<<<grid_dim, block_dim, shared_bytes>>>(curr_d, prev_d, res_d, 
-                                                         Ns, Nr, Nc, 
-                                                         cn_coeff, r_half, recip_denom, true);
+        cn_kernel<<<grid_dim, block_dim>>>(curr_d, prev_d, res_d, Ns, Nr, Nc, 
+                                           cn_coeff, r_half, recip_denom, true);
         hipDeviceSynchronize();
 
         to_host(res_d, &res);
@@ -126,6 +128,26 @@ void Grid::cn(double& t) {
     }
 
     timer.end(t);
+}
+
+Diag Grid::diagnostics(double& t) {
+    Timer timer;
+    timer.start();
+    
+    double min_v = 1.0, max_v = 0.0, total = 0.0;
+
+    // outer grid
+    diag_kernel<<<grid_dim, block_dim>>>(curr_d, Ns, Nr, Nc, 
+                                         min_d, max_d, total_d);
+    hipDeviceSynchronize();
+
+    to_host(min_d, &min_v);
+    to_host(max_d, &max_v);
+    to_host(total_d, &total);
+
+    timer.end(t);
+
+    return Diag{min_v, max_v, total};
 }
 
 void Grid::debug() {
