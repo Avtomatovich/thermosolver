@@ -12,19 +12,6 @@
                 "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
-        },
-        {
-            "name": "hip-preset",
-            "displayName": "HIPCC",
-            "description": "Using HIP compiler for GPU",
-            "binaryDir": "${sourceDir}/build",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "/opt/rocm-7.1.0/bin/hipcc",
-                "CMAKE_CXX_COMPILER": "/opt/rocm-7.1.0/bin/hipcc",
-                "CMAKE_CXX_FLAGS": "-Wno-unused-result",
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
-            }
         }
     ],
     "buildPresets": [
