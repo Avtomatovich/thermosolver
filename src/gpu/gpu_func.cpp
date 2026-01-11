@@ -29,12 +29,10 @@ namespace GPUFunc {
                               double* res_d, int Ns, int Nr, int Nc, 
                               double cn_coeff, double r_half, double recip_denom, bool parity)
     { 
-        int nwarps = (blockDim.z * blockDim.y * blockDim.x + warpSize - 1) / warpSize;
-        
-        // array of per-warp reduction vars
-        __shared__ double max_arr[nwarps];
+        extern __shared__ double max_arr[];
         
         int curr_idx = idx(threadIdx.z, threadIdx.y, threadIdx.x, blockDim.y, blockDim.x);
+        int nwarps = (blockDim.z * blockDim.y * blockDim.x + warpSize - 1) / warpSize;
         int warp_idx = curr_idx / warpSize;
         int lane_idx = curr_idx % warpSize;
 
@@ -77,14 +75,16 @@ namespace GPUFunc {
         __global__ void diag_kernel(const double* __restrict__ curr_d, int Ns, int Nr, int Nc,
                                     double* min_d, double* max_d, double* total_d)
         {
-            int nwarps = (blockDim.z * blockDim.y * blockDim.x + warpSize - 1) / warpSize;
-            
-            // arrays of per-warp reduction vars
-            __shared__ double min_arr[nwarps], max_arr[nwarps], sum_arr[nwarps];
+            extern __shared__ double red_arr[];
             
             int thread_idx = idx(threadIdx.z, threadIdx.y, threadIdx.x, blockDim.y, blockDim.x);
+            int nwarps = (blockDim.z * blockDim.y * blockDim.x + warpSize - 1) / warpSize;
             int warp_idx = thread_idx / warpSize;
             int lane_idx = thread_idx % warpSize;
+            
+            double* min_arr = red_arr;
+            double* max_arr = red_arr + nwarps; 
+            double* sum_arr = red_arr + nwarps * 2;
 
             int i = blockIdx.z * blockDim.z + threadIdx.z;
             int j = blockIdx.y * blockDim.y + threadIdx.y;

@@ -84,6 +84,8 @@ void Grid::init_d() {
         (Nr + block_dim.y - 1) / block_dim.y,
         (Ns + block_dim.z - 1) / block_dim.z  // slowest
     };
+    // array size of warp reduction partials (no of warps = no of threads per block / warp size)
+    shared_bytes = ((block_dim.x * block_dim.y * block_dim.z + WARP_SIZE - 1) / WARP_SIZE) * sizeof(double);
     
     // NOTE: size in bytes
     hipMalloc(reinterpret_cast<void**>(&prev_d), Ns * Nr * Nc * sizeof(double));
@@ -112,12 +114,12 @@ void Grid::cn(double& t) {
         double res = 0.0;
 
         // RBGS
-        cn_kernel<<<grid_dim, block_dim>>>(curr_d, prev_d, res_d, Ns, Nr, Nc, 
-                                           cn_coeff, r_half, recip_denom, false);
+        cn_kernel<<<grid_dim, block_dim, shared_bytes>>>(curr_d, prev_d, res_d, Ns, Nr, Nc, 
+                                                         cn_coeff, r_half, recip_denom, false);
         hipDeviceSynchronize();
         
-        cn_kernel<<<grid_dim, block_dim>>>(curr_d, prev_d, res_d, Ns, Nr, Nc, 
-                                           cn_coeff, r_half, recip_denom, true);
+        cn_kernel<<<grid_dim, block_dim, shared_bytes>>>(curr_d, prev_d, res_d, Ns, Nr, Nc, 
+                                                         cn_coeff, r_half, recip_denom, true);
         hipDeviceSynchronize();
 
         to_host(res_d, &res);
@@ -136,9 +138,9 @@ Diag Grid::diagnostics(double& t) {
     
     double min_v = 1.0, max_v = 0.0, total = 0.0;
 
-    // outer grid
-    diag_kernel<<<grid_dim, block_dim>>>(curr_d, Ns, Nr, Nc, 
-                                         min_d, max_d, total_d);
+    // NOTE: tripling shared memory array size for 3 reductions
+    diag_kernel<<<grid_dim, block_dim, shared_bytes * 3>>>(curr_d, Ns, Nr, Nc, 
+                                                           min_d, max_d, total_d);
     hipDeviceSynchronize();
 
     to_host(min_d, &min_v);
