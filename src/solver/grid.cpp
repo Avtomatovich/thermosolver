@@ -88,8 +88,9 @@ void Grid::init_d() {
     shared_bytes = ((block_dim.x * block_dim.y * block_dim.z + WARP_SIZE - 1) / WARP_SIZE) * sizeof(double);
     
     // NOTE: size in bytes
-    hipMalloc(reinterpret_cast<void**>(&prev_d), Ns * Nr * Nc * sizeof(double));
-    hipMalloc(reinterpret_cast<void**>(&curr_d), Ns * Nr * Nc * sizeof(double));
+    int size = Ns * Nr * Nc * sizeof(double);
+    hipMalloc(reinterpret_cast<void**>(&prev_d), size);
+    hipMalloc(reinterpret_cast<void**>(&curr_d), size);
     hipMalloc(reinterpret_cast<void**>(&res_d), sizeof(double));
     hipMalloc(reinterpret_cast<void**>(&min_d), sizeof(double));
     hipMalloc(reinterpret_cast<void**>(&max_d), sizeof(double));
