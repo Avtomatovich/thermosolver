@@ -7,11 +7,13 @@
  */
 
 #include <omp.h>
-#include <cmath>
+#include <random>
+#include <iostream>
 #include "grid.h"
 #include "utils/timer.h"
 #include "gpu/gpu_func.h"
 
+#define MAX_ITER 100
 #define WARP_SIZE 64 // num of threads in AMD wavefront
 
 using namespace GPUFunc;
@@ -41,6 +43,7 @@ Grid::Grid(int N) :
     curr.assign(size, 0.0);
     
     init(); // random initial state
+
     init_d(); // allocate device memory
     to_device(prev, prev_d); // copy prev to device
     to_device(curr, curr_d); // copy curr to device
@@ -49,7 +52,26 @@ Grid::Grid(int N) :
 Grid::~Grid() {
     hipFree(prev_d);
     hipFree(curr_d);
-    hipFree(red_d);
+    hipFree(res_d);
+}
+
+void Grid::init() {
+    #pragma omp parallel
+    {
+        std::default_random_engine gen(100 + omp_get_thread_num());
+        std::uniform_real_distribution<double> distrib(0.0, 1.0);
+
+        // inner grid only
+        #pragma omp for
+        for (int i = 1; i <= Ns - 2; i++) {
+            for (int j = 1; j <= Nr - 2; j++) {
+                for (int k = 1; k <= Nc - 2; k++) {
+                    int at = idx(i, j, k);
+                    prev[at] = curr[at] = distrib(gen);
+                }            
+            }
+        }
+    }
 }
 
 void Grid::init_d() {
@@ -65,39 +87,46 @@ void Grid::init_d() {
     // NOTE: size in bytes
     hipMalloc(reinterpret_cast<void**>(&prev_d), Ns * Nr * Nc * sizeof(double));
     hipMalloc(reinterpret_cast<void**>(&curr_d), Ns * Nr * Nc * sizeof(double));
-    hipMalloc(reinterpret_cast<void**>(&red_d), sizeof(double));
+    hipMalloc(reinterpret_cast<void**>(&res_d), sizeof(double));
 }
 
-// void Grid::rbgs(double& t) {
-//     Timer timer;
-//     timer.start();
+void Grid::ftcs(double& t) {
+    Timer timer;
+    timer.start();
 
-//     rbgs_kernel<<<grid_dim, block_dim>>>(curr_d, prev_d, Ns, Nr, Nc, dx_2, false);
-//     hipDeviceSynchronize();
+    ftcs_kernel<<<grid_dim, block_dim>>>(curr_d, prev_d, Ns, Nr, Nc, ftcs_coeff, r);
+    hipDeviceSynchronize();
 
-//     rbgs_kernel<<<grid_dim, block_dim>>>(curr_d, prev_d, Ns, Nr, Nc, dx_2, true);
-//     hipDeviceSynchronize();
+    timer.end(t);
+}
 
-//     timer.end(t);
-// }
+void Grid::cn(double& t) {
+    Timer timer;
+    timer.start();
 
-// double Grid::mae(double& t) {
-//     Timer timer;
-//     timer.start();
-    
-//     double mae;
-    
-//     set_val_device(red_d, 0.0);
-    
-//     err_kernel<<<grid_dim, block_dim, shared_bytes>>>(curr_d, soln_d, Ns, Nr, Nc, false, red_d);
-//     hipDeviceSynchronize();
-    
-//     to_host(red_d, &mae);
+    for (int s = 1; s <= MAX_ITER; s++) {
+        double res = 0.0;
 
-//     timer.end(t);
+        // RBGS
+        cn_kernel<<<grid_dim, block_dim, shared_bytes>>>(curr_d, prev_d, res_d, 
+                                                         Ns, Nr, Nc, 
+                                                         cn_coeff, r_half, recip_denom, false);
+        hipDeviceSynchronize();
+        
+        cn_kernel<<<grid_dim, block_dim, shared_bytes>>>(curr_d, prev_d, res_d, 
+                                                         Ns, Nr, Nc, 
+                                                         cn_coeff, r_half, recip_denom, true);
+        hipDeviceSynchronize();
 
-//     return mae;
-// }
+        to_host(res_d, &res);
+
+        if (res < TOL) break;
+
+        if (s == MAX_ITER) std::cerr << "CN did not converge at residual: " << res << std::endl;
+    }
+
+    timer.end(t);
+}
 
 void Grid::debug() {
     std::cout << "===Prev===" << std::endl;

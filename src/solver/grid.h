@@ -11,8 +11,8 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
-#include "utils/stats.h"
 #include <hip/hip_runtime.h>
+#include "utils/stats.h"
 
 class Grid
 {
@@ -40,7 +40,7 @@ private:
     double recip_denom; // Crank-Nicolson update denominator reciprocal
     std::vector<double> prev, curr; // iteration states
 
-    double *prev_d, *curr_d, *red_d; // GPU vars
+    double *prev_d, *curr_d, *res_d; // GPU vars
 
     // GPU dim vars
     dim3 grid_dim, block_dim;
@@ -59,17 +59,5 @@ private:
         // i = slice, j = row, k = col
         // slow -> fast, i -> j -> k
         return i * Nr * Nc + j * Nc + k;
-    }
-
-    inline double neighbors(const std::vector<double>& m, int i, int j, int k) {
-        return  m[idx(i - 1, j, k)] + m[idx(i + 1, j, k)] + 
-                m[idx(i, j - 1, k)] + m[idx(i, j + 1, k)] + 
-                m[idx(i, j, k - 1)] + m[idx(i, j, k + 1)];
-    }
-
-    inline double cn_update(int at, int i, int j, int k) {
-        return (cn_coeff * prev[at] + 
-                r_half * (neighbors(prev, i, j, k) + neighbors(curr, i, j, k))) * 
-                recip_denom;
     }
 };
