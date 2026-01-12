@@ -9,6 +9,7 @@
 #include <omp.h>
 #include <random>
 #include <iostream>
+#include <sstream>
 #include "grid.h"
 #include "utils/timer.h"
 
@@ -63,7 +64,7 @@ void Grid::init() {
     }
 }
 
-void Grid::ftcs(double& t) {
+void Grid::ftcs(Stats& stats) {
     Timer timer;
     timer.start();
 
@@ -78,14 +79,16 @@ void Grid::ftcs(double& t) {
         }
     }
 
-    timer.end(t);
+    timer.end(stats.solve_t);
 }
 
-void Grid::cn(double& t) {
+void Grid::cn(Stats& stats) {
     Timer timer;
     timer.start();
 
     for (int s = 1; s <= MAX_ITER; s++) {
+        stats.cn_steps++;
+
         double res = 0.0;
 
         // RBGS
@@ -127,29 +130,43 @@ void Grid::cn(double& t) {
         if (s == MAX_ITER) std::cerr << "CN did not converge at residual: " << res << std::endl;
     }
 
-    timer.end(t);
+    timer.end(stats.solve_t);
 }
 
 Diag Grid::diagnostics(double& t) {
     Timer timer;
     timer.start();
     
-    double min_v = 1.0, max_v = 0.0, total = 0.0;
+    double min_e = 1.0, max_e = 0.0, total_e = 0.0;
 
     // outer grid
-    #pragma omp parallel for reduction(min:min_v) reduction(max:max_v) reduction(+:total)
+    #pragma omp parallel for reduction(min:min_e) reduction(max:max_e) reduction(+:total_e)
     for (int i = 0; i <= Ns - 1; i++) {
         for (int j = 0; j <= Nr - 1; j++) {
             for (int k = 0; k <= Nc - 1; k++) {
                 double c = curr[idx(i, j, k)];
-                min_v = fmin(min_v, c);
-                max_v = fmax(max_v, c);
-                total += c;
+                min_e = fmin(min_e, c);
+                max_e = fmax(max_e, c);
+                total_e += c;
             }
         }
     }
 
     timer.end(t);
 
-    return Diag{min_v, max_v, total};
+    return Diag{min_e, max_e, total_e};
+}
+
+std::string Grid::pprint() {
+    std::stringstream buf;
+    for (int r = 0; r < Nr; r++) {
+        for (int c = 0; c < Nc; c++) {
+            // print out first non-boundary 2D slice
+            buf << curr[idx(1, r, c)];
+            if (c != Nc - 1) buf << ", ";            
+        }
+        buf << std::endl;
+    }
+    
+    return buf.str();
 }

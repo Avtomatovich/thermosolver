@@ -11,6 +11,7 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <string>
 #include "utils/stats.h"
 
 class Grid
@@ -18,12 +19,14 @@ class Grid
 public:
     Grid(int N);
 
-    void ftcs(double& t);
-    void cn(double& t);
+    void ftcs(Stats& stats);
+    void cn(Stats& stats);
 
     Diag diagnostics(double& t);
 
     inline void swap() { std::swap(prev, curr); }
+
+    std::string pprint();
 
 private:
     // vars
@@ -54,7 +57,7 @@ private:
 
     inline double cn_update(int at, int i, int j, int k) {
         return (cn_coeff * prev[at] + 
-                r_half * (neighbors(prev, i, j, k) + neighbors(curr, i, j, k))) * 
+                r_half * ( neighbors(prev, i, j, k) + neighbors(curr, i, j, k) )) * 
                 recip_denom;
     }
 };

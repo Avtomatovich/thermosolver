@@ -10,11 +10,12 @@
 # %J maps to jobId.stepId
 
 # args = 
-#  Solver method (0 = FTCS, 1 = CN),
-#  Grid size (must be >= 5 and multiple of 5),
-#  Number of time steps (must be > 0),
-#  Diagnostics logging (optional, 0 = false, non-zero int = true),
+#  Solver method (0 = FTCS, 1 = CN)
+#  Grid size (must be >= 5 and multiple of 5)
+#  Number of time steps (must be > 0)
+#  State logging (optional, 0 = false, non-zero int = true)
+#  Diagnostics logging (optional, 0 = false, non-zero int = true)
 #  Performance logging (optional, 0 = false, non-zero int = true)
-./build/main.exe 1 100 1000
+./build/main.exe 0 100 1000
 
 echo "OpenMP Thermosolver job complete."

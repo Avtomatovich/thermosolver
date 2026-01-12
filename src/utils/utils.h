@@ -18,6 +18,7 @@ namespace Utils {
     // NOTE: navigate out of build folder to find csv files
     const std::string solve_file = "./data/solve_data.csv";
     const std::string diag_file = "./data/diag_data.csv";
+    const std::string state_file = "./data/state_data.dat";
 
     void write_file(const std::string& filename, 
                     const std::string& line, 
@@ -39,5 +40,9 @@ namespace Utils {
     }
 
     void write_diag(const Stats& stats);
+
+    inline void write_state(const std::string& state, 
+                            std::ios_base::openmode mode)
+    { write_file(state_file, state, mode); }
 
 }
