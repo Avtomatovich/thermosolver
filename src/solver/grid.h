@@ -11,6 +11,7 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <string>
 #include <hip/hip_runtime.h>
 #include "utils/stats.h"
 
@@ -21,16 +22,15 @@ public:
 
     ~Grid();
 
-    void ftcs(double& t);
-    void cn(double& t);
+    void ftcs(Stats& stats);
+    void cn(Stats& stats);
 
     Diag diagnostics(double& t);
 
     // swap device pointers
     inline void swap() { std::swap(prev_d, curr_d); }
 
-    // debug
-    void debug();
+    std::string pprint();
 
 private:
     // vars
@@ -53,8 +53,6 @@ private:
     // funcs
     void init();
     void init_d();
-
-    void pprint(const std::vector<double>& m);
 
     inline int idx(int i, int j, int k) {
         // i = slice, j = row, k = col

@@ -18,12 +18,12 @@ class Solver
 public:
     Solver(int dim, Method method, bool diag_log, bool perf_log);
 
-    void solve(int nsteps);
+    void solve(int nsteps, bool state_log);
     
 private:
     int N;
     Method type;
     Grid grid;
     Stats stats;
-    std::function<void(Grid&, double&)> step;
+    std::function<void(Grid&, Stats&)> step;
 };

@@ -1,6 +1,8 @@
 import os
 import csv
 import matplotlib.pyplot as plt
+from matplotlib import animation
+from matplotlib import cm
 import numpy as np
 
 def roof_line():
@@ -67,6 +69,11 @@ def energy_plot():
     else:
         print(f'{csv_filename} is not a file')
 
+# TODO: implement diffusion animation
+def animate():
+    return
+
 if __name__ == "__main__":
     roof_line()
     energy_plot()
+    animate()

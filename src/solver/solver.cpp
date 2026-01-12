@@ -17,22 +17,25 @@ Solver::Solver(int dim, Method method, bool diag_log, bool perf_log) :
     step(type == Method::FTCS ? &Grid::ftcs : &Grid::cn)
 {}
 
-void Solver::solve(int nsteps) {
+void Solver::solve(int nsteps, bool state_log) {
     Timer timer;
     timer.start(); /* TIMER START */
 
-    if (stats.diag_log) { // initial metrics
-        stats.diag_data.push_back(grid.diagnostics(stats.diag_t));
-    }
+    // initial metrics
+    if (stats.diag_log) stats.diag_data.push_back(grid.diagnostics(stats.diag_t));
+    if (state_log) Utils::write_state(grid.pprint(), std::ios::out);
 
     stats.steps = nsteps;
 
     for (int i = 1; i <= nsteps; i++) {
-        step(grid, stats.solve_t);
+        step(grid, stats);
 
         if (stats.diag_log) {
             stats.diag_data.push_back(grid.diagnostics(stats.diag_t));
         }
+
+        // print state every 100 time steps
+        if (state_log && i % 100 == 0) Utils::write_state(grid.pprint(), std::ios::app);
 
         grid.swap();
     }

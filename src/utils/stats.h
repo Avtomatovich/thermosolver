@@ -29,11 +29,14 @@ struct Stats {
     // time in seconds
     double total_t, solve_t, diag_t;
 
-    // toggle performance logging
+    // logging toggles
     bool diag_log, perf_log;
 
-    // no of iterations until end of simulation
+    // no of temporal iterations
     int steps;
+
+    // no of spatial RBGS iterations in Crank-Nicolson
+    int cn_steps = 0;
 
     // diagnostic data
     std::vector<Diag> diag_data;

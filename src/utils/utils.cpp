@@ -35,9 +35,8 @@ namespace Utils {
         double bw = bytes * 1e-9 / t; // in GB/sec
         double fr = flops * 1e-9 / t; // in GFLOPS/sec
 
-	    printf("\t\t* Time: %g sec \n\t\t* FLOPS: %.1g flops \n\t\t* Memory: %.1g bytes\n", t, flops, bytes);
-	    printf("\t* ==Results==\n");
-	    printf("\t\t* Flop Rate: %g GF/s \n\t\t* Bandwidth: %g GB/s \n\t\t* AI: %g FLOPS/byte\n\n", fr, bw, ai);
+	    printf("\t\t* Time: %G sec \n\t\t* FLOPS: %G flops \n\t\t* Memory: %G bytes\n", t, flops, bytes);
+	    printf("\t\t* Flop Rate: %G GF/s \n\t\t* Bandwidth: %G GB/s \n\t\t* AI: %G FLOPS/byte\n\n", fr, bw, ai);
         fflush(stdout);
 
         if (stats.perf_log) {
@@ -47,22 +46,29 @@ namespace Utils {
         }
     }
 
+    // TODO: recompute bytes and flops (GPU reduction adds complexity)
     void solve_stats(const Stats& stats, Method method) {
         double t = stats.solve_t;
         
         double bytes, flops;
         switch (method) {
             case Method::FTCS:
-                // bytes per step = 7 load + 1 write for 8 bytes each
-                bytes = (7.0 + 1.0) * sizeof(double) * stats.in_size; // total bytes
-                // flops per step = 2 mul + 6 add
-                flops = (2.0 + 6.0) * stats.in_size; // total flops
+                // bytes per cell = 7 load + 1 write for 8 bytes each
+                bytes = (7.0 + 1.0) * sizeof(double); 
+                bytes *= stats.in_size * stats.steps; // total bytes
+
+                // flops per cell = 2 mul + 6 add
+                flops = 2.0 + 6.0; 
+                flops *= stats.in_size * stats.steps; // total flops
                 break;
             case Method::CN:
-                // bytes per step = 14 load + 1 write for 8 bytes each
-                bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size; // total bytes
-                // flops per step = 12 add + 3 mul + 1 sub + 1 max + 1 abs
-                flops = (12.0 + 3.0 + 1.0 + 1.0 + 1.0) * stats.in_size; // total flops
+                // bytes per cell = 14 load + 1 write for 8 bytes each
+                bytes = (14.0 + 1.0) * sizeof(double); 
+                bytes *= stats.in_size * stats.steps * stats.cn_steps; // total bytes
+
+                // flops per cell = 12 add + 3 mul + 1 sub + 1 max + 1 abs
+                flops = 12.0 + 3.0 + 1.0 + 1.0 + 1.0;
+                flops *= stats.in_size * stats.steps * stats.cn_steps; // total flops
                 break;
         }
 
@@ -70,12 +76,17 @@ namespace Utils {
 	    print_stats(solve_file, stats, t, bytes, flops);
     }
 
+    // TODO: recompute bytes and flops (GPU reduction adds complexity)
     void diag_stats(const Stats& stats) {
         double t = stats.diag_t;
-        // bytes per step = 2 load for 8 bytes each
-        double bytes = 2.0 * sizeof(double) * stats.out_size; // total bytes
-        // flops per step = 1 sub + 1 abs + 2 max + 1 min + 1 add
-        double flops = (1.0 + 1.0 + 2.0 + 1.0 + 1.0) * stats.out_size; // total flops
+
+        // bytes per cell = 1 load for 8 bytes each
+        double bytes = 1.0 * sizeof(double);
+        bytes *= stats.out_size * stats.steps; // total bytes
+
+        // flops per cell = 1 max + 1 min + 1 add
+        double flops = 1.0 + 1.0 + 1.0;
+        flops *= stats.out_size * stats.steps; // total flops
 
         printf("* ==Diagnostic Stats==\n");
 	    print_stats(diag_file, stats, t, bytes, flops);

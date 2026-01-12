@@ -9,6 +9,7 @@
 #include <omp.h>
 #include <random>
 #include <iostream>
+#include <sstream>
 #include "grid.h"
 #include "utils/timer.h"
 #include "gpu/gpu_func.h"
@@ -100,21 +101,23 @@ void Grid::init_d() {
     hipMalloc(reinterpret_cast<void**>(&total_d), sizeof(double));
 }
 
-void Grid::ftcs(double& t) {
+void Grid::ftcs(Stats& stats) {
     Timer timer;
     timer.start();
 
     ftcs_kernel<<<grid_dim, block_dim>>>(curr_d, prev_d, Ns, Nr, Nc, ftcs_coeff, r);
     hipDeviceSynchronize();
 
-    timer.end(t);
+    timer.end(stats.solve_t);
 }
 
-void Grid::cn(double& t) {
+void Grid::cn(Stats& stats) {
     Timer timer;
     timer.start();
 
     for (int s = 1; s <= MAX_ITER; s++) {
+        stats.cn_steps++;
+
         double res_h = 0.0;
 
         // copy initial val to device
@@ -137,7 +140,7 @@ void Grid::cn(double& t) {
         if (s == MAX_ITER) std::cerr << "CN did not converge at residual: " << res_h << std::endl;
     }
 
-    timer.end(t);
+    timer.end(stats.solve_t);
 }
 
 Diag Grid::diagnostics(double& t) {
@@ -166,26 +169,19 @@ Diag Grid::diagnostics(double& t) {
     return Diag{min_h, max_h, total_h};
 }
 
-void Grid::debug() {
-    std::cout << "===Prev===" << std::endl;
-    pprint(prev);
-    std::cout << "===Curr===" << std::endl;
-    pprint(curr);
-}
-
-void Grid::pprint(const std::vector<double>& m) {
-    std::cout << "* Dims: " << Ns << " x " << Nr << " x " << Nc << std::endl << std::endl;
-
-    for (int i = 0; i < Ns; i++) {
-        std::cout << "Slice: " << i << std::endl;
-        for (int j = 0; j < Nr; j++) {
-            for (int k = 0; k < Nc; k++) {
-                std::cout << m[idx(i, j, k)] << ", ";
-            }
-            std::cout << std::endl;
+std::string Grid::pprint() {
+    // copy device data to host for output
+    to_host(curr_d, curr);
+    
+    std::stringstream buf;
+    for (int r = 0; r < Nr; r++) {
+        for (int c = 0; c < Nc; c++) {
+            // print out first non-boundary 2D slice
+            buf << curr[idx(1, r, c)];
+            if (c != Nc - 1) buf << ", ";            
         }
-        std::cout << std::endl;
+        buf << std::endl;
     }
-    std::cout << std::endl << std::endl;
-    fflush(stdout);
+    
+    return buf.str();
 }
