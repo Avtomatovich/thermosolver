@@ -16,15 +16,18 @@
 namespace Utils {
 
     // NOTE: navigate out of build folder to find csv files
-    const std::string solve_file = "./data/solve_data.csv";
-    const std::string diag_file = "./data/diag_data.csv";
-    const std::string state_file = "./data/state_data.dat";
+    // performance files
+    const std::string solve_perf_file = "./data/solve_perf.csv";
+    const std::string diag_perf_file = "./data/diag_perf.csv";
+    // data files
+    const std::string diag_data_file = "./data/diag_data.csv";
+    const std::string heat_data_file = "./data/heat_data.dat";
 
     void write_file(const std::string& filename, 
                     const std::string& line, 
                     std::ios_base::openmode mode);
 
-    void write_head();
+    void write_head(bool diag_log);
 
     // stats funcs
     void print_stats(const std::string& file, const Stats& stats, 
@@ -41,8 +44,8 @@ namespace Utils {
 
     void write_diag(const Stats& stats);
 
-    inline void write_state(const std::string& state, 
+    inline void write_heat(const std::string& line, 
                             std::ios_base::openmode mode)
-    { write_file(state_file, state, mode); }
+    { write_file(heat_data_file, line, mode); }
 
 }

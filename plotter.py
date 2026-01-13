@@ -1,7 +1,7 @@
 import os
 import csv
 import matplotlib.pyplot as plt
-from matplotlib import animation
+from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib import cm
 import numpy as np
 
@@ -16,7 +16,7 @@ def roof_line():
     # giga-bytes/sec * FLOPs/byte = GFLOPs/sec, clamp with peak FLOPs
     roofline = [min(peak_flops, peak_bw * ai) for ai in ai_range]
 
-    filenames = ['solve_data', 'diag_data']
+    filenames = ['solve_perf', 'diag_perf']
 
     for filename in filenames:
         csv_filename = 'data/' + filename + '.csv'
@@ -45,8 +45,7 @@ def roof_line():
                 plt.clf()
 
 def energy_plot():
-    filename = 'diag_data'
-    csv_filename = 'data/' + filename + '.csv'
+    csv_filename = 'data/diag_data.csv'
     
     if os.path.isfile(csv_filename):
         with open(csv_filename, 'r') as csvfile:
@@ -69,11 +68,42 @@ def energy_plot():
     else:
         print(f'{csv_filename} is not a file')
 
-# TODO: implement diffusion animation
-def animate():
-    return
+def diffuse_anim():
+    filename = 'data/heat_data.dat'
+
+    if not os.path.isfile(filename):
+        print(f'{filename} is not a file')
+        return
+
+    frames = 0
+    z = []
+
+    with open(filename, 'r') as file:
+        frames = int(file.readline().strip())
+
+        rows = []
+        for line in file:
+            if line.strip() != '':
+                rows.append([float(n) for n in line.strip().split(',')])
+            else:
+                z.append(rows)
+                rows = []
+
+    fig, ax = plt.subplots(subplot_kw={'projection':'3d'})
+
+    x = y = np.arange(0, len(z[0]))
+    x, y = np.meshgrid(x, y)
+
+    def frame(i):
+        ax.clear()
+        ax.plot_surface(x, y, np.array(z[i]), cmap=cm.inferno)
+        ax.set_zlim(0, 1)
+    
+    anim = FuncAnimation(fig, frame, frames)
+
+    anim.save('plots/diffuse.gif', writer=PillowWriter())
 
 if __name__ == "__main__":
     roof_line()
     energy_plot()
-    animate()
+    diffuse_anim()
