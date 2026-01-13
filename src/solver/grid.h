@@ -37,7 +37,7 @@ private:
     double recip_denom; // Crank-Nicolson update denominator reciprocal
     std::vector<double> prev, curr; // iteration states
 
-    static constexpr double ALPHA = 5.2e-7; // thermal diffusivity of brick
+    static constexpr double ALPHA = 1.3e-7; // thermal diffusivity of rubber
     static constexpr double TOL = 1e-5; // convergence tolerance factor
 
     // funcs
