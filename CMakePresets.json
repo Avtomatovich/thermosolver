@@ -23,10 +23,7 @@
                 "CMAKE_CXX_COMPILER": "/opt/rocm-7.1.0/bin/hipcc",
                 "CMAKE_CXX_FLAGS": "-Wno-unused-result",
                 "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "CMAKE_PREFIX_PATH": "/opt",
-                "CMAKE_LIBRARY_PATH": "/opt/rocm-7.1.0/lib/llvm/lib",
-                "HIP_ROOT": "/opt/rocm-7.1.0"
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
         }
     ],
