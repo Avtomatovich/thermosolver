@@ -36,8 +36,8 @@ namespace Utils {
         double bw = bytes * 1e-9 / t; // in GB/sec
         double fr = flops * 1e-9 / t; // in GFLOPS/sec
 
-	    printf("\t\t* Time: %G sec \n\t\t* FLOPS: %G flops \n\t\t* Memory: %G bytes\n", t, flops, bytes);
-	    printf("\t\t* Flop Rate: %G GF/s \n\t\t* Bandwidth: %G GB/s \n\t\t* AI: %G FLOPS/byte\n\n", fr, bw, ai);
+	    printf("\t* Time: %G sec \n\t* FLOPS: %G flops \n\t* Memory: %G bytes\n", t, flops, bytes);
+	    printf("\t* Flop Rate: %G GF/s \n\t* Bandwidth: %G GB/s \n\t* AI: %G FLOPS/byte\n\n", fr, bw, ai);
         fflush(stdout);
 
         if (stats.perf_log) {
