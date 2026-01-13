@@ -11,17 +11,15 @@
 
 namespace GPUFunc {
 
-    // relaxation factor for SOR method
-    static __device__ constexpr double omega = 1.8;
-
-    static __device__ constexpr double RECIP_6 = 1.0 / 6.0;
-
     static inline __device__ int idx(int i, int j, int k, int Nr, int Nc) {
         return i * Nr * Nc + j * Nc + k;
     }
 
-    inline void set_val_device(double* var_d, double val) {
-        hipMemset(var_d, val, sizeof(double));
+    static inline __device__ double neighbors(const double* __restrict__ m, 
+                                              int i, int j, int k, int Nr, int Nc) {
+        return  m[idx(i - 1, j, k, Nr, Nc)] + m[idx(i + 1, j, k, Nr, Nc)] + 
+                m[idx(i, j - 1, k, Nr, Nc)] + m[idx(i, j + 1, k, Nr, Nc)] + 
+                m[idx(i, j, k - 1, Nr, Nc)] + m[idx(i, j, k + 1, Nr, Nc)];
     }
 
     inline void to_device(const std::vector<double>& src, double* dst) {
@@ -44,23 +42,15 @@ namespace GPUFunc {
         hipMemcpy(dst, src, sizeof(double), hipMemcpyDeviceToHost);
     }
 
-    __global__ void jacobi_kernel(double* prev_d, double* curr_d, double* rhs_d,
-                                  int Nr, int Nc, double dx_2, 
-                                  int start, int end);
+    __global__ void ftcs_kernel(double* __restrict__ curr_d, const double* __restrict__ prev_d,
+                                int Ns, int Nr, int Nc, double ftcs_coeff, double r);
 
-    __global__ void rbgs_kernel(double* curr_d, double* rhs_d,
-                                int Nr, int Nc, double dx_2, 
-                                int start, int end, int offset, bool parity);
+    __global__ void cn_kernel(double* __restrict__ curr_d, const double* __restrict__ prev_d,
+                              double* __restrict__ res_d, int Ns, int Nr, int Nc, 
+                              double cn_coeff, double r_half, double recip_denom, bool parity);
 
-    __global__ void sor_kernel(double* curr_d, double* rhs_d,
-                                int Nr, int Nc, double dx_2, 
-                                int start, int end, int offset, bool parity);
-
-    __global__ void res_kernel(double* curr_d, double* rhs_d,
-                                int Nr, int Nc, double recip_dx_2,
-                                int start, int end, double* res_d);
-    
-    __global__ void err_kernel(double* curr_d, double* soln_d,
-                                int Ns, int Nr, int Nc, bool sq, double* err_d);
+    __global__ void diag_kernel(const double* __restrict__ curr_d, double* __restrict__ min_d, 
+                                double* __restrict__ max_d, double* __restrict__ total_d,
+                                int Ns, int Nr, int Nc);
 
 }

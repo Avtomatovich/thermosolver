@@ -1,6 +1,8 @@
 import os
 import csv
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, PillowWriter
+from matplotlib import cm
 import numpy as np
 
 def roof_line():
@@ -14,7 +16,7 @@ def roof_line():
     # giga-bytes/sec * FLOPs/byte = GFLOPs/sec, clamp with peak FLOPs
     roofline = [min(peak_flops, peak_bw * ai) for ai in ai_range]
 
-    filenames = ['solve_data', 'res_data', 'mae_data', 'rmse_data']
+    filenames = ['solve_perf', 'diag_perf']
 
     for filename in filenames:
         csv_filename = 'data/' + filename + '.csv'
@@ -42,40 +44,66 @@ def roof_line():
                 plt.savefig('plots/' + filename)
                 plt.clf()
 
-def res_err_plot():
-    filename = 'conv_data'
-    csv_filename = 'data/' + filename + '.csv'
+def energy_plot():
+    csv_filename = 'data/diag_data.csv'
     
     if os.path.isfile(csv_filename):
         with open(csv_filename, 'r') as csvfile:
-            steps, res, mae, rmse = [], [], [], []
+            time, heat = [], []
 
             reader = csv.DictReader(csvfile)
             for row in reader:
-                steps.append(int(row['steps']))
-                res.append(float(row['residual']))
-                mae.append(float(row['mae']))
-                rmse.append(float(row['rmse']))
+                time.append(int(row['steps']))
+                heat.append(float(row['total']))
             
-            plt.xlabel('Iteration')
-
-            plt.yscale('log')
-            plt.ylabel('Residual/Error')
+            plt.xlabel('Time')
+            plt.ylabel('Energy')
             
-            # plot x=steps, y=residuals
-            plt.plot(steps, res, '-r', label='residual')
-            # plot x=steps, y=mae
-            plt.plot(steps, mae, '-g', label='mae')
-            # plot x=steps, y=rmse
-            plt.plot(steps, rmse, '-b', label='rmse')
-            plt.legend()
+            # plot x=steps, y=energy
+            plt.plot(time, heat, '-r')
             
-            plt.title(filename.replace('_', ' ').capitalize())
-            plt.savefig('plots/' + filename)
+            plt.title('Heat Diffusion')
+            plt.savefig('plots/energy_plot')
             plt.clf()
     else:
         print(f'{csv_filename} is not a file')
 
+def diffuse_anim():
+    filename = 'data/heat_data.dat'
+
+    if not os.path.isfile(filename):
+        print(f'{filename} is not a file')
+        return
+
+    frames = 0
+    z = []
+
+    with open(filename, 'r') as file:
+        frames = int(file.readline().strip())
+
+        rows = []
+        for line in file:
+            if line.strip() != '':
+                rows.append([float(n) for n in line.strip().split(',')])
+            else:
+                z.append(rows)
+                rows = []
+
+    fig, ax = plt.subplots(subplot_kw={'projection':'3d'})
+
+    x = y = np.arange(0, len(z[0]))
+    x, y = np.meshgrid(x, y)
+
+    def frame(i):
+        ax.clear()
+        ax.plot_surface(x, y, np.array(z[i]), cmap=cm.inferno)
+        ax.set_zlim(0, 1)
+    
+    anim = FuncAnimation(fig, frame, frames)
+
+    anim.save('plots/heat_diffuse.gif', writer=PillowWriter(fps=8))
+
 if __name__ == "__main__":
     roof_line()
-    res_err_plot()
+    energy_plot()
+    diffuse_anim()

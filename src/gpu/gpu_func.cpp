@@ -10,83 +10,29 @@
 
 namespace GPUFunc {
 
-    __global__ void jacobi_kernel(double* prev_d, double* curr_d, double* rhs_d,
-                                  int Nr, int Nc, double dx_2, 
-                                  int start, int end) 
+    __global__ void ftcs_kernel(double* __restrict__ curr_d, const double* __restrict__ prev_d,
+                                int Ns, int Nr, int Nc, double ftcs_coeff, double r)
     {
         int i = blockIdx.z * blockDim.z + threadIdx.z;
         int j = blockIdx.y * blockDim.y + threadIdx.y;
         int k = blockIdx.x * blockDim.x + threadIdx.x;
 
-        // inner grid ops, avoid boundaries
-        if (i < start || i > end || j < 1 || j > Nr - 2 || k < 1 || k > Nc - 2) return;
+        // inner grid
+        if (i < 1 || i > Ns - 2 || j < 1 || j > Nr - 2 || k < 1 || k > Nc - 2) return;
 
         int at = idx(i, j, k, Nr, Nc);
 
-        curr_d[at] = (prev_d[idx(i - 1, j, k, Nr, Nc)] + prev_d[idx(i + 1, j, k, Nr, Nc)] +
-                      prev_d[idx(i, j - 1, k, Nr, Nc)] + prev_d[idx(i, j + 1, k, Nr, Nc)] +
-                      prev_d[idx(i, j, k - 1, Nr, Nc)] + prev_d[idx(i, j, k + 1, Nr, Nc)] -
-                      dx_2 * rhs_d[at]) * RECIP_6;
+        curr_d[at] = ftcs_coeff * prev_d[at] + r * neighbors(prev_d, i, j, k, Nr, Nc);
     }
 
-    __global__ void rbgs_kernel(double* curr_d, double* rhs_d,
-                                int Nr, int Nc, double dx_2, 
-                                int start, int end, int offset, bool parity)
-    {
-        int i = blockIdx.z * blockDim.z + threadIdx.z;
-        int j = blockIdx.y * blockDim.y + threadIdx.y;
-        int k = blockIdx.x * blockDim.x + threadIdx.x;
-
-        // inner grid ops, avoid boundaries
-        if (i < start || i > end || j < 1 || j > Nr - 2 || k < 1 || k > Nc - 2) return;
-
-        // use global index to compute parity
-        if (((offset + i - 1) + j + k) % 2 != parity) return;
-
-        int at = idx(i, j, k, Nr, Nc);
-
-        curr_d[at] = (curr_d[idx(i - 1, j, k, Nr, Nc)] + curr_d[idx(i + 1, j, k, Nr, Nc)] +
-                      curr_d[idx(i, j - 1, k, Nr, Nc)] + curr_d[idx(i, j + 1, k, Nr, Nc)] +
-                      curr_d[idx(i, j, k - 1, Nr, Nc)] + curr_d[idx(i, j, k + 1, Nr, Nc)] -
-                      dx_2 * rhs_d[at]) * RECIP_6;
-
-    }
-
-    __global__ void sor_kernel(double* curr_d, double* rhs_d,
-                                int Nr, int Nc, double dx_2, 
-                                int start, int end, int offset, bool parity)
-    {
-        int i = blockIdx.z * blockDim.z + threadIdx.z;
-        int j = blockIdx.y * blockDim.y + threadIdx.y;
-        int k = blockIdx.x * blockDim.x + threadIdx.x;
-
-        // inner grid ops, avoid boundaries
-        if (i < start || i > end || j < 1 || j > Nr - 2 || k < 1 || k > Nc - 2) return;
-
-        // use global index to compute parity
-        if (((offset + i - 1) + j + k) % 2 != parity) return;
-
-        int at = idx(i, j, k, Nr, Nc);
-
-        double c = curr_d[at];
-
-        double stencil = (curr_d[idx(i - 1, j, k, Nr, Nc)] + curr_d[idx(i + 1, j, k, Nr, Nc)] +
-                          curr_d[idx(i, j - 1, k, Nr, Nc)] + curr_d[idx(i, j + 1, k, Nr, Nc)] +
-                          curr_d[idx(i, j, k - 1, Nr, Nc)] + curr_d[idx(i, j, k + 1, Nr, Nc)] -
-                          dx_2 * rhs_d[at]) * RECIP_6;
-
-        curr_d[at] = c + omega * (stencil - c);
-
-    }
-
-    __global__ void res_kernel(double* curr_d, double* rhs_d,
-                                int Nr, int Nc, double recip_dx_2,
-                                int start, int end, double* res_d)
-    {
-        extern __shared__ double max_res[];
-
+    __global__ void cn_kernel(double* __restrict__ curr_d, const double* __restrict__ prev_d,
+                              double* __restrict__ res_d, int Ns, int Nr, int Nc, 
+                              double cn_coeff, double r_half, double recip_denom, bool parity)
+    { 
+        extern __shared__ double max_arr[];
+        
         int curr_idx = idx(threadIdx.z, threadIdx.y, threadIdx.x, blockDim.y, blockDim.x);
-        int nwarps = blockDim.z * blockDim.y * blockDim.x / warpSize;
+        int nwarps = (blockDim.z * blockDim.y * blockDim.x + warpSize - 1) / warpSize;
         int warp_idx = curr_idx / warpSize;
         int lane_idx = curr_idx % warpSize;
 
@@ -97,71 +43,87 @@ namespace GPUFunc {
         // init residual
         double res = 0.0;
 
-        // inner grid ops, avoid boundaries
-        if (i >= start && i <= end && j >= 1 && j <= Nr - 2 && k >= 1 && k <= Nc - 2) {
-            int center = idx(i, j, k, Nr, Nc);            
-            // store max (residual = actual laplacian - iterative laplacian)
-            res = fabs(rhs_d[center] - (curr_d[idx(i - 1, j, k, Nr, Nc)] + curr_d[idx(i + 1, j, k, Nr, Nc)] + 
-                                        curr_d[idx(i, j - 1, k, Nr, Nc)] + curr_d[idx(i, j + 1, k, Nr, Nc)] + 
-                                        curr_d[idx(i, j, k - 1, Nr, Nc)] + curr_d[idx(i, j, k + 1, Nr, Nc)] -
-                                        6.0 * curr_d[center]) * recip_dx_2);
+        // inner grid
+        if (i >= 1 && i <= Ns - 2 && j >= 1 && j <= Nr - 2 && k >= 1 && k <= Nc - 2) {
+            if ((i + j + k & 1) == parity) {
+                int at = idx(i, j, k, Nr, Nc);            
+                double c = curr_d[at];
+                double u = (cn_coeff * prev_d[at] + 
+                            r_half * ( neighbors(prev_d, i, j, k, Nr, Nc) + neighbors(curr_d, i, j, k, Nr, Nc) )) * 
+                            recip_denom;
+                curr_d[at] = u;
+                res = fabs(u - c);
+            }
         }
 
         __syncwarp();
-
+        
         for (int offset = warpSize / 2; offset > 0; offset /= 2) {
             res = fmax(res, __shfl_down(res, offset));
         }
-
-        if (lane_idx == 0) max_res[warp_idx] = res;
-
+    
+        if (lane_idx == 0) max_arr[warp_idx] = res;
+    
         __syncthreads();
-
+    
         if (curr_idx == 0) {
-            for (int w = 1; w < nwarps; w++) res = fmax(res, max_res[w]);
+            for (int w = 1; w < nwarps; w++) res = fmax(res, max_arr[w]);
             atomicMax(res_d, res);
         }
-        
     }
 
-    __global__ void err_kernel(double* curr_d, double* soln_d,
-                                int Ns, int Nr, int Nc, bool sq, double* err_d)
+    __global__ void diag_kernel(const double* __restrict__ curr_d, double* __restrict__ min_d, 
+                                double* __restrict__ max_d, double* __restrict__ total_d,
+                                int Ns, int Nr, int Nc)
     {
-        extern __shared__ double sum[];
-
-        int curr_idx = idx(threadIdx.z, threadIdx.y, threadIdx.x, blockDim.y, blockDim.x);
-        int nwarps = blockDim.z * blockDim.y * blockDim.x / warpSize;
-        int warp_idx = curr_idx / warpSize;
-        int lane_idx = curr_idx % warpSize;
+        extern __shared__ double red_arr[];
+        
+        int thread_idx = idx(threadIdx.z, threadIdx.y, threadIdx.x, blockDim.y, blockDim.x);
+        int nwarps = (blockDim.z * blockDim.y * blockDim.x + warpSize - 1) / warpSize;
+        int warp_idx = thread_idx / warpSize;
+        int lane_idx = thread_idx % warpSize;
+        
+        double* min_arr = red_arr;
+        double* max_arr = red_arr + nwarps; 
+        double* sum_arr = red_arr + nwarps * 2;
 
         int i = blockIdx.z * blockDim.z + threadIdx.z;
         int j = blockIdx.y * blockDim.y + threadIdx.y;
         int k = blockIdx.x * blockDim.x + threadIdx.x;
 
-        // init error
-        double err = 0.0;
-
-        // outer grid ops, avoid halos at i = 1 and i = Ns - 2
-        if (i >= 1 && i <= Ns - 2 && j >= 0 && j <= Nr - 1 && k >= 0 && k <= Nc - 1) {
-            int center = idx(i, j, k, Nr, Nc);
-            err = fabs(curr_d[center] - soln_d[center]);
-            if (sq) err *= err;
+        double thread_min = 1.0, thread_max = 0.0, thread_sum = 0.0;
+        // outer grid
+        if (i >= 0 && i <= Ns - 1 && j >= 0 && j <= Nr - 1 && k >= 0 && k <= Nc - 1) {
+            thread_min = thread_max = thread_sum = curr_d[idx(i, j, k, Nr, Nc)];
         }
 
         __syncwarp();
 
         for (int offset = warpSize / 2; offset > 0; offset /= 2) {
-            err += __shfl_down(err, offset);
+            thread_min = fmin(thread_min, __shfl_down(thread_min, offset));
+            thread_max = fmax(thread_max, __shfl_down(thread_max, offset));
+            thread_sum += __shfl_down(thread_sum, offset);
         }
 
-        if (lane_idx == 0) sum[warp_idx] = err;
+        if (lane_idx == 0) {
+            min_arr[warp_idx] = thread_min;
+            max_arr[warp_idx] = thread_max;
+            sum_arr[warp_idx] = thread_sum;
+        }
 
         __syncthreads();
 
-        if (curr_idx == 0) {
-            for (int w = 1; w < nwarps; w++) err += sum[w];
-            atomicAdd(err_d, err);
+        if (thread_idx == 0) {
+            for (int w = 1; w < nwarps; w++) {
+                thread_min = fmin(thread_min, min_arr[w]);
+                thread_max = fmax(thread_max, max_arr[w]);
+                thread_sum += sum_arr[w];
+            }
+            atomicMin(min_d, thread_min);
+            atomicMax(max_d, thread_max);
+            atomicAdd(total_d, thread_sum);
         }
+
     }
 
 }

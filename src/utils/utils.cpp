@@ -18,87 +18,83 @@ namespace Utils {
                     std::ios_base::openmode mode)
     {
         std::fstream file(filename, mode);
-        if (!file.is_open()) {
-            throw std::runtime_error("Failed to open: " + filename);
-        }
+        if (!file.is_open()) throw std::runtime_error("Failed to open: " + filename);
         file << line << std::endl;
         file.close();
     }
     
-    void write_head() {
+    void write_head(bool diag_log) {
         std::string header = "size,steps,time,flop_rate,arithmetic_intensity,bandwidth";
-        for (const std::string& filename : {solve_file, res_file, mae_file, rmse_file}) {
-            write_file(filename, header, std::ios::out);
-        }
+        
+        write_file(solve_perf_file, header, std::ios::out);
+
+        if (diag_log) write_file(diag_perf_file, header, std::ios::out);
     }
 
-    void print_stats(const std::string& file, int N, int steps, double t, double bytes, double flops) {
+    void print_stats(const std::string& file, const Stats& stats, double t, double bytes, double flops) {
         double ai = flops / bytes; // arithmetic intensity
         double bw = bytes * 1e-9 / t; // in GB/sec
         double fr = flops * 1e-9 / t; // in GFLOPS/sec
 
-	    printf("\t\t* Time: %g sec \n\t\t* FLOPS: %.1g flops \n\t\t* Memory: %.1g bytes\n", t, flops, bytes);
-	    printf("\t* ==Results==\n");
-	    printf("\t\t* Flop Rate: %g GF/s \n\t\t* Bandwidth: %g GB/s \n\t\t* AI: %g FLOPS/byte\n\n", fr, bw, ai);
+	    printf("\t* Time: %G sec \n\t* FLOPS: %G flops \n\t* Memory: %G bytes\n", t, flops, bytes);
+	    printf("\t* Flop Rate: %G GF/s \n\t* Bandwidth: %G GB/s \n\t* AI: %G FLOPS/byte\n\n", fr, bw, ai);
         fflush(stdout);
 
-        std::stringstream row;
-        row << N << "," << steps << "," << t << "," << fr << "," << ai << "," << bw;
-        write_file(file, row.str(), std::ios::app);
+        if (stats.perf_log) {
+            std::stringstream row;
+            row << stats.N << "," << stats.steps << "," << t << "," << fr << "," << ai << "," << bw;
+            write_file(file, row.str(), std::ios::app);
+        }
     }
 
-    void solve_stats(const Stats& stats) {
+    // TODO: recompute bytes and flops with profiler
+    void solve_stats(const Stats& stats, Method method) {
         double t = stats.solve_t;
-        // bytes per step = 7 load + 1 write for 8 bytes each
-        double bytes = (7.0 + 1.0) * sizeof(double) * stats.in_size; // total bytes
-        // flops per step = 5 add + 1 sub + 2 mul
-        double flops = (5.0 + 1.0 + 2.0) * stats.in_size; // total flops
+        
+        double bytes, flops;
+        switch (method) {
+            case Method::FTCS:
+                // bytes per cell = 7 load + 1 write for 8 bytes each
+                bytes = (7.0 + 1.0) * sizeof(double) * stats.in_size * stats.steps;
+
+                // flops per cell = 2 mul + 6 add
+                flops = (2.0 + 6.0) * stats.in_size * stats.steps;
+                break;
+            case Method::CN:
+                // bytes per cell = 14 load + 1 write for 8 bytes each
+                bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size * stats.steps * stats.cn_steps;
+
+                // flops per cell = 12 add + 3 mul + 1 sub + 1 max + 1 abs
+                flops = (12.0 + 3.0 + 1.0 + 1.0 + 1.0) * stats.in_size * stats.steps * stats.cn_steps;
+                break;
+        }
 
         printf("* ==Solver Stats==\n");
-	    print_stats(solve_file, stats.N, stats.steps, t, bytes, flops);
+	    print_stats(solve_perf_file, stats, t, bytes, flops);
     }
 
-    void res_stats(const Stats& stats) {
-        double t = stats.res_t;
-        // bytes per step = 8 load for 8 bytes each
-        double bytes = 8.0 * sizeof(double) * stats.in_size; // total bytes
-        // flops per step = 5 add + 2 sub + 2 mul
-        double flops = (5.0 + 2.0 + 2.0) * stats.in_size; // total flops
+    // TODO: recompute bytes and flops with profiler
+    void diag_stats(const Stats& stats) {
+        double t = stats.diag_t;
 
-        printf("* ==Residual Stats==\n");
-	    print_stats(res_file, stats.N, stats.steps, t, bytes, flops);
+        // bytes per cell = 1 load for 8 bytes each
+        double bytes = 1.0 * sizeof(double) * stats.out_size * stats.steps; // total bytes
+
+        // flops per cell = 1 max + 1 min + 1 add
+        double flops = (1.0 + 1.0 + 1.0) * stats.out_size * stats.steps; // total flops
+
+        printf("* ==Diagnostic Stats==\n");
+	    print_stats(diag_perf_file, stats, t, bytes, flops);
     }
 
-    void mae_stats(const Stats& stats) {
-        double t = stats.mae_t;
-        // bytes per step = 2 load for 8 bytes each
-        double bytes = 2.0 * sizeof(double) * stats.out_size; // total bytes
-        // flops per step = 1 sub + 1 add
-        double flops = (1.0 + 1.0) * stats.out_size; // total flops
+    void write_diag(const Stats& stats) {
+        std::ofstream file(diag_data_file);
+        if (!file.is_open()) throw std::runtime_error("Failed to open: " + diag_data_file);
 
-        printf("* ==MAE Stats==\n");
-        print_stats(mae_file, stats.N, stats.steps, t, bytes, flops);
-    }
-
-    void rmse_stats(const Stats& stats) {
-        double t = stats.rmse_t;
-        // bytes per step = 2 load for 8 bytes each
-        double bytes = 2.0 * sizeof(double) * stats.out_size; // total bytes
-        // flops per step = 1 sub + 1 mul + 1 add
-        double flops = (1.0 + 1.0 + 1.0) * stats.out_size; // total flops
-
-        printf("* ==RMSE Stats==\n");
-        print_stats(rmse_file, stats.N, stats.steps, t, bytes, flops);
-    }
-
-    void write_conv(const Stats& stats) {
-        std::ofstream file(conv_file);
-        if (!file.is_open()) throw std::runtime_error("Failed to open: " + conv_file);
-
-        file << "N,steps,residual,mae,rmse" << std::endl;
-        for (int i = 0; i < stats.conv_data.size(); i++) {
-            const std::array<double, 3>& data = stats.conv_data[i];
-            file << stats.N << "," << i << "," << data[0] << "," << data[1] << "," << data[2] << std::endl;
+        file << "N,steps,min,max,total" << std::endl;
+        for (int i = 0; i < stats.diag_data.size(); i++) {
+            const Diag& diag = stats.diag_data[i];
+            file << stats.N << "," << i << "," << diag.min << "," << diag.max << "," << diag.total << std::endl;
         }
 
         file.close();

@@ -1,0 +1,14 @@
+||================================================================||
+||============ Forward Time-Centered Space Heat Solver ===========||
+* No of time steps: 1000, Size: 200 x 200 x 200
+* Duration: 0.199616 sec
+* ==Solver Stats==
+	* Time: 0.192135 sec 
+	* FLOPS: 6.20991E+10 flops 
+	* Memory: 4.96793E+11 bytes
+	* Flop Rate: 323.206 GF/s 
+	* Bandwidth: 2585.65 GB/s 
+	* AI: 0.125 FLOPS/byte
+
+Execution complete.
+HIP Thermosolver job complete.
