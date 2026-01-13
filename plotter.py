@@ -89,8 +89,7 @@ def diffuse_anim():
                 z.append(rows)
                 rows = []
 
-    fig = plt.figure()
-    ax = plt.add_subplot(projection='3d')
+    fig, ax = plt.subplots(subplot_kw={'projection':'3d'})
 
     x = y = np.arange(0, len(z[0]))
     x, y = np.meshgrid(x, y)
@@ -102,7 +101,7 @@ def diffuse_anim():
     
     anim = FuncAnimation(fig, frame, frames)
 
-    anim.save('diffuse.gif', writer=PillowWriter(fps=24))
+    anim.save('plots/diffuse.gif', writer=PillowWriter())
 
 if __name__ == "__main__":
     roof_line()

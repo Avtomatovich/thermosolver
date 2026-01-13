@@ -23,11 +23,12 @@ namespace Utils {
         file.close();
     }
     
-    void write_head() {
+    void write_head(bool diag_log) {
         std::string header = "size,steps,time,flop_rate,arithmetic_intensity,bandwidth";
-        for (const std::string& filename : {solve_perf_file, diag_perf_file}) {
-            write_file(filename, header, std::ios::out);
-        }
+        
+        write_file(solve_perf_file, header, std::ios::out);
+
+        if (diag_log) write_file(diag_perf_file, header, std::ios::out);
     }
 
     void print_stats(const std::string& file, const Stats& stats, double t, double bytes, double flops) {

@@ -47,13 +47,13 @@ int main(int argc, char* argv[]) {
 
         bool heat_log = false, perf_log = false, diag_log = false;
         // parse heatmap toggle if 5 args present
-        if (argc == 5) heat_log = std::stoi(argv[4]);
+        if (argc >= 5) heat_log = std::stoi(argv[4]);
         // parse diagnostics toggle if 6 args present
-        if (argc == 6) diag_log = std::stoi(argv[5]);
+        if (argc >= 6) diag_log = std::stoi(argv[5]);
         // parse performance toggle if 7 args present
-        if (argc == 7) perf_log = std::stoi(argv[6]);
+        if (argc >= 7) perf_log = std::stoi(argv[6]);
 
-        if (perf_log) Utils::write_head();
+        if (perf_log) Utils::write_head(diag_log);
 
         Solver{dim, method, diag_log, perf_log}.solve(nsteps, heat_log);
 

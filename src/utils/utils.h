@@ -27,7 +27,7 @@ namespace Utils {
                     const std::string& line, 
                     std::ios_base::openmode mode);
 
-    void write_head();
+    void write_head(bool diag_log);
 
     // stats funcs
     void print_stats(const std::string& file, const Stats& stats, 
