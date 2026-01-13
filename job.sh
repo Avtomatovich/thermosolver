@@ -16,6 +16,6 @@
 #  Heatmap logging (optional, 0 = false, non-zero int = true)
 #  Diagnostics logging (optional, 0 = false, non-zero int = true)
 #  Performance logging (optional, 0 = false, non-zero int = true)
-./build/main.exe 0 100 1000
+./build/main.exe 0 100 1000 1 1 1
 
 echo "OpenMP Thermosolver job complete."
