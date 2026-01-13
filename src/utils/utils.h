@@ -41,8 +41,8 @@ namespace Utils {
 
     void write_diag(const Stats& stats);
 
-    inline void write_state(const std::string& state, 
+    inline void write_state(const std::string& line, 
                             std::ios_base::openmode mode)
-    { write_file(state_file, state, mode); }
+    { write_file(state_file, line, mode); }
 
 }
