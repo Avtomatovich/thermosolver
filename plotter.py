@@ -101,7 +101,7 @@ def diffuse_anim():
     
     anim = FuncAnimation(fig, frame, frames)
 
-    anim.save('plots/diffuse.gif', writer=PillowWriter())
+    anim.save('plots/heat_diffuse.gif', writer=PillowWriter(fps=8))
 
 if __name__ == "__main__":
     roof_line()

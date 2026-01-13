@@ -16,24 +16,24 @@ struct Diag {
 
 struct Stats {
     Stats(int dim, bool dlog, bool plog) : 
-        N(dim), in_size((N-2)*(N-2)*(N-2)), out_size(N*N*N), 
+        N(dim), in_size((dim-2) * (dim-2) * (dim-2)), out_size(dim * dim * dim), 
         diag_log(dlog), perf_log(plog)
     {}
 
-    // matrix dim
+    // grid dim
     int N;
 
     // inner and outer grid size
     int in_size, out_size;
 
     // time in seconds
-    double total_t, solve_t, diag_t;
+    double total_t = 0, solve_t = 0, diag_t = 0;
 
     // logging toggles
     bool diag_log, perf_log;
 
     // no of temporal iterations
-    int steps;
+    int steps = 0;
 
     // no of spatial RBGS iterations in Crank-Nicolson
     int cn_steps = 0;
