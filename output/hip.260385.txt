@@ -1,13 +1,13 @@
 ||================================================================||
 ||================= Crank-Nicolson Heat Solver ===================||
 * No of time steps: 1000, Size: 100 x 100 x 100
-* Duration: 0.600342 sec
+* Duration: 1.56146 sec
 * ==Solver Stats==
-	* Time: 0.593187 sec 
+	* Time: 1.5614 sec 
 	* FLOPS: 3.63425E+10 flops 
 	* Memory: 2.42283E+11 bytes
-	* Flop Rate: 61.2666 GF/s 
-	* Bandwidth: 408.444 GB/s 
+	* Flop Rate: 23.2756 GF/s 
+	* Bandwidth: 155.171 GB/s 
 	* AI: 0.15 FLOPS/byte
 
 Execution complete.

@@ -47,7 +47,7 @@ private:
     dim3 grid_dim, block_dim;
     int shared_bytes;
     
-    static constexpr double ALPHA = 2.3e-5; // thermal diffusivity of iron
+    static constexpr double ALPHA = 5.2e-7; // thermal diffusivity of brick
     static constexpr double TOL = 1e-5; // convergence tolerance factor
 
     // funcs
