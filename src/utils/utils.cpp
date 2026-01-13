@@ -25,7 +25,7 @@ namespace Utils {
     
     void write_head() {
         std::string header = "size,steps,time,flop_rate,arithmetic_intensity,bandwidth";
-        for (const std::string& filename : {solve_file, diag_file}) {
+        for (const std::string& filename : {solve_perf_file, diag_perf_file}) {
             write_file(filename, header, std::ios::out);
         }
     }
@@ -73,7 +73,7 @@ namespace Utils {
         }
 
         printf("* ==Solver Stats==\n");
-	    print_stats(solve_file, stats, t, bytes, flops);
+	    print_stats(solve_perf_file, stats, t, bytes, flops);
     }
 
     // TODO: recompute bytes and flops (GPU reduction adds complexity)
@@ -89,12 +89,12 @@ namespace Utils {
         flops *= stats.out_size * stats.steps; // total flops
 
         printf("* ==Diagnostic Stats==\n");
-	    print_stats(diag_file, stats, t, bytes, flops);
+	    print_stats(diag_perf_file, stats, t, bytes, flops);
     }
 
     void write_diag(const Stats& stats) {
-        std::ofstream file(diag_file);
-        if (!file.is_open()) throw std::runtime_error("Failed to open: " + diag_file);
+        std::ofstream file(diag_data_file);
+        if (!file.is_open()) throw std::runtime_error("Failed to open: " + diag_data_file);
 
         file << "N,steps,min,max,total" << std::endl;
         for (int i = 0; i < stats.diag_data.size(); i++) {

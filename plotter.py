@@ -16,7 +16,7 @@ def roof_line():
     # giga-bytes/sec * FLOPs/byte = GFLOPs/sec, clamp with peak FLOPs
     roofline = [min(peak_flops, peak_bw * ai) for ai in ai_range]
 
-    filenames = ['solve_data']
+    filenames = ['solve_perf', 'diag_perf']
 
     for filename in filenames:
         csv_filename = 'data/' + filename + '.csv'
@@ -45,8 +45,7 @@ def roof_line():
                 plt.clf()
 
 def energy_plot():
-    filename = 'diag_data'
-    csv_filename = 'data/' + filename + '.csv'
+    csv_filename = 'data/diag_data.csv'
     
     if os.path.isfile(csv_filename):
         with open(csv_filename, 'r') as csvfile:
@@ -70,7 +69,7 @@ def energy_plot():
         print(f'{csv_filename} is not a file')
 
 def diffuse_anim():
-    filename = 'data/state_data.dat'
+    filename = 'data/heat_data.dat'
 
     if not os.path.isfile(filename):
         print(f'{filename} is not a file')

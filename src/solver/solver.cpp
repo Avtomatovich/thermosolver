@@ -18,7 +18,7 @@ Solver::Solver(int dim, Method method, bool diag_log, bool perf_log) :
     step(type == Method::FTCS ? &Grid::ftcs : &Grid::cn)
 {}
 
-void Solver::solve(int nsteps, bool state_log) {
+void Solver::solve(int nsteps, bool heat_log) {
     Timer timer;
     timer.start(); /* TIMER START */
 
@@ -29,9 +29,9 @@ void Solver::solve(int nsteps, bool state_log) {
 
     // initial metrics
     if (stats.diag_log) stats.diag_data.push_back(grid.diagnostics(stats.diag_t));
-    if (state_log) {
-        Utils::write_state(std::to_string(nframes), std::ios::out);
-        Utils::write_state(grid.pprint(), std::ios::app);
+    if (heat_log) {
+        Utils::write_heat(std::to_string(nframes), std::ios::out);
+        Utils::write_heat(grid.pprint(), std::ios::app);
     }
 
     for (int i = 1; i <= nsteps; i++) {
@@ -40,7 +40,7 @@ void Solver::solve(int nsteps, bool state_log) {
         if (stats.diag_log) stats.diag_data.push_back(grid.diagnostics(stats.diag_t));
 
         // print state every few time steps
-        if (state_log && i % skip == 0) Utils::write_state(grid.pprint(), std::ios::app);
+        if (heat_log && i % skip == 0) Utils::write_heat(grid.pprint(), std::ios::app);
 
         grid.swap();
     }
@@ -58,6 +58,6 @@ void Solver::solve(int nsteps, bool state_log) {
     fflush(stdout);
 
     // print results
-    if (stats.diag_log) Utils::write_diag(stats);
     Utils::write_stats(stats, type);
+    if (stats.diag_log) Utils::write_diag(stats);
 }
