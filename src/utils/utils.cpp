@@ -23,10 +23,10 @@ namespace Utils {
         file.close();
     }
     
-    void write_head(bool diag_log) {
+    void write_head(bool diag_log, Method method) {
         std::string header = "size,steps,time,flop_rate,arithmetic_intensity,bandwidth";
         
-        write_file(solve_perf_file, header, std::ios::out);
+        write_file(method == Method::FTCS ? ftcs_perf_file : cn_perf_file, header, std::ios::out);
 
         if (diag_log) write_file(diag_perf_file, header, std::ios::out);
     }
@@ -50,26 +50,26 @@ namespace Utils {
     void solve_stats(const Stats& stats, Method method) {
         double t = stats.solve_t;
         
-        double bytes, flops;
-        switch (method) {
-            case Method::FTCS:
-                // bytes per cell = 7 load + 1 write for 8 bytes each
-                bytes = (7.0 + 1.0) * sizeof(double) * stats.in_size * stats.steps;
+        printf("* ==Solver Stats==\n");
 
-                // flops per cell = 2 mul + 6 add
-                flops = (2.0 + 6.0) * stats.in_size * stats.steps;
-                break;
-            case Method::CN:
-                // bytes per cell = 14 load + 1 write for 8 bytes each
-                bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size * stats.cn_steps;
+        if (method == Method::FTCS) {
+            // bytes per cell = 7 load + 1 write for 8 bytes each
+            double bytes = (7.0 + 1.0) * sizeof(double) * stats.in_size * stats.steps;
 
-                // flops per cell = 12 add + 3 mul + 1 max + 1 sub + 1 abs
-                flops = (12.0 + 3.0 + 1.0 + 1.0 + 1.0) * stats.in_size * stats.cn_steps;
-                break;
+            // flops per cell = 2 mul + 6 add
+            double flops = (2.0 + 6.0) * stats.in_size * stats.steps;
+
+            print_stats(ftcs_perf_file, stats, t, bytes, flops);
+        } else {
+            // bytes per cell = 14 load + 1 write for 8 bytes each
+            double bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size * stats.cn_steps;
+    
+            // flops per cell = 12 add + 3 mul + 1 max + 1 sub + 1 abs
+            double flops = (12.0 + 3.0 + 1.0 + 1.0 + 1.0) * stats.in_size * stats.cn_steps;
+            
+            print_stats(cn_perf_file, stats, t, bytes, flops);
         }
 
-        printf("* ==Solver Stats==\n");
-	    print_stats(solve_perf_file, stats, t, bytes, flops);
     }
 
     void diag_stats(const Stats& stats) {
