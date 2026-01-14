@@ -45,26 +45,26 @@ def roof_line():
                 plt.savefig('plots/' + filename)
                 plt.clf()
 
-def energy_plot():
+def temp_plot():
     csv_filename = 'data/diag_data.csv'
     
     if os.path.isfile(csv_filename):
         with open(csv_filename, 'r') as csvfile:
-            time, heat = [], []
+            time, temp = [], []
 
             reader = csv.DictReader(csvfile)
             for row in reader:
                 time.append(int(row['steps']))
-                heat.append(float(row['total']))
+                temp.append(float(row['total']))
             
             plt.xlabel('Time')
-            plt.ylabel('Energy')
+            plt.ylabel('Temperature')
             
-            # plot x=steps, y=energy
-            plt.plot(time, heat, '-r')
+            # plot x=steps, y=temp
+            plt.plot(time, temp, '-r')
             
             plt.title('Heat Diffusion')
-            plt.savefig('plots/energy_plot')
+            plt.savefig('plots/temp_plot')
             plt.clf()
     else:
         print(f'{csv_filename} is not a file')
@@ -106,5 +106,5 @@ def diffuse_anim():
 
 if __name__ == "__main__":
     roof_line()
-    energy_plot()
+    temp_plot()
     diffuse_anim()
