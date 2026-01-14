@@ -19,6 +19,6 @@
 # ./build/main.exe 0 100 1000
 
 # Profiling command
-# rocprofv3 --kernel-trace --memory-copy-trace -f pftrace -d profile -o hip.ftcs.200.1000 -- ./build/main.exe 0 200 1000
+# rocprofv3 --kernel-trace --memory-copy-trace -f pftrace -d profile -o hip.ftcs.100.1000 -- ./build/main.exe 0 100 1000
 
 echo "HIP Thermosolver job complete."

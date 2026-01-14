@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 Solver::Solver(int dim, Method method, bool diag_log, bool perf_log) :
-    N(dim), type(method), grid(dim), stats(dim, diag_log, perf_log),
+    N(dim), type(method), stats(dim, diag_log, perf_log), grid(dim, stats),
     step(type == Method::FTCS ? &Grid::ftcs : &Grid::cn)
 {}
 

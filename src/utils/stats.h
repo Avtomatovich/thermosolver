@@ -38,6 +38,12 @@ struct Stats {
     // no of spatial RBGS iterations in Crank-Nicolson
     int cn_steps = 0;
 
+    // number of threads in GPU block
+    int nthreads;
+    
+    // number of blocks in GPU grid
+    int nblocks;
+
     // diagnostic data
     std::vector<Diag> diag_data;
 };
