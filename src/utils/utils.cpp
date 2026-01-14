@@ -23,10 +23,10 @@ namespace Utils {
         file.close();
     }
     
-    void write_head(bool diag_log) {
+    void write_head(bool diag_log, Method method) {
         std::string header = "size,steps,time,flop_rate,arithmetic_intensity,bandwidth";
         
-        write_file(solve_perf_file, header, std::ios::out);
+        write_file(method == Method::FTCS ? ftcs_perf_file : cn_perf_file, header, std::ios::out);
 
         if (diag_log) write_file(diag_perf_file, header, std::ios::out);
     }
@@ -50,13 +50,16 @@ namespace Utils {
     void solve_stats(const Stats& stats, Method method) {
         double t = stats.solve_t;
         
-        double bytes, flops;
+        printf("* ==Solver Stats==\n");
+        
         if (method == Method::FTCS) {
             // bytes per cell = 7 load + 1 write for 8 bytes each
-            bytes = (7.0 + 1.0) * sizeof(double) * stats.in_size * stats.steps;
+            double bytes = (7.0 + 1.0) * sizeof(double) * stats.in_size * stats.steps;
 
             // flops per cell = 2 mul + 6 add
-            flops = (2.0 + 6.0) * stats.in_size * stats.steps;
+            double flops = (2.0 + 6.0) * stats.in_size * stats.steps;
+
+            print_stats(ftcs_perf_file, stats, t, bytes, flops);
         } else {
             // number of warps in block (512 threads per block / 64 = 8)
             int nwarps = (stats.nthreads + WARP_SIZE - 1) / WARP_SIZE;
@@ -68,7 +71,7 @@ namespace Utils {
             // bytes per block-tier reduction = (nwarps - 1) number of load ops in block for 2 launches
             double block_bytes = (nwarps - 1.0) * sizeof(double) * stats.nblocks * 2.0 * stats.cn_steps;
             // total bytes
-            bytes = update_bytes + shuffle_bytes + block_bytes;
+            double bytes = update_bytes + shuffle_bytes + block_bytes;
 
             // flops per update = 12 add + 3 mul + 1 sub + 1 abs
             double update_flops = (12.0 + 3.0 + 1.0 + 1.0) * stats.in_size * stats.cn_steps;
@@ -77,11 +80,10 @@ namespace Utils {
             // flops per block-tier reduction = nwarps number of max ops
             double block_flops = nwarps * stats.nblocks * 2.0 * stats.cn_steps;
             // total flops
-            flops = update_flops + shuffle_flops + block_flops;
-        }
+            double flops = update_flops + shuffle_flops + block_flops;
 
-        printf("* ==Solver Stats==\n");
-	    print_stats(solve_perf_file, stats, t, bytes, flops);
+            print_stats(cn_perf_file, stats, t, bytes, flops);
+        }
     }
 
     void diag_stats(const Stats& stats) {

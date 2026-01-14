@@ -16,7 +16,7 @@ def roof_line():
     # giga-bytes/sec * FLOPs/byte = GFLOPs/sec, clamp with peak FLOPs
     roofline = [min(peak_flops, peak_bw * ai) for ai in ai_range]
 
-    filenames = ['solve_perf', 'diag_perf']
+    filenames = ['ftcs_perf', 'cn_perf', 'diag_perf']
 
     for filename in filenames:
         csv_filename = 'data/' + filename + '.csv'
@@ -41,7 +41,10 @@ def roof_line():
                 plt.axvline(peak_ai, color="r", linestyle='--', label=f'threshold AI = {peak_ai}')
                 plt.legend()
                 
-                plt.title(filename.split('_')[0].capitalize() + f' Performance at N={n}')
+                title = filename.split('_')[0]
+                title = title.capitalize() if filename == 'diag_perf' else title.upper()
+                
+                plt.title(title + f' Performance at N={n}')               
                 plt.savefig('plots/' + filename)
                 plt.clf()
 
