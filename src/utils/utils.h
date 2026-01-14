@@ -13,6 +13,8 @@
 #include "stats.h"
 #include "method.h"
 
+#define WARP_SIZE 64 // num of threads in AMD wavefront
+
 namespace Utils {
 
     // NOTE: navigate out of build folder to find csv files

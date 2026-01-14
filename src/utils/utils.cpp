@@ -7,9 +7,9 @@
  */
 
 #include "utils.h"
+#include <cmath>
 #include <fstream>
 #include <sstream>
-#include <stdexcept>
 
 namespace Utils {
 
@@ -47,41 +47,64 @@ namespace Utils {
         }
     }
 
-    // TODO: recompute bytes and flops with profiler
     void solve_stats(const Stats& stats, Method method) {
         double t = stats.solve_t;
         
         double bytes, flops;
-        switch (method) {
-            case Method::FTCS:
-                // bytes per cell = 7 load + 1 write for 8 bytes each
-                bytes = (7.0 + 1.0) * sizeof(double) * stats.in_size * stats.steps;
+        if (method == Method::FTCS) {
+            // bytes per cell = 7 load + 1 write for 8 bytes each
+            bytes = (7.0 + 1.0) * sizeof(double) * stats.in_size * stats.steps;
 
-                // flops per cell = 2 mul + 6 add
-                flops = (2.0 + 6.0) * stats.in_size * stats.steps;
-                break;
-            case Method::CN:
-                // bytes per cell = 14 load + 1 write for 8 bytes each
-                bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size * stats.steps * stats.cn_steps;
+            // flops per cell = 2 mul + 6 add
+            flops = (2.0 + 6.0) * stats.in_size * stats.steps;
+        } else {
+            // number of warps in block (512 threads per block / 64 = 8)
+            int nwarps = (stats.nthreads + WARP_SIZE - 1) / WARP_SIZE;
 
-                // flops per cell = 12 add + 3 mul + 1 sub + 1 max + 1 abs
-                flops = (12.0 + 3.0 + 1.0 + 1.0 + 1.0) * stats.in_size * stats.steps * stats.cn_steps;
-                break;
+            // bytes per update = 14 load + 1 write for 8 bytes each
+            double update_bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size;
+            // bytes per shuffle = 1 write of 8 bytes for each warp in block, done for each launch
+            double shuffle_bytes = 1.0 * nwarps * sizeof(double) * stats.nblocks * 2.0;
+            // bytes per block-tier reduction = (nwarps - 1) number of load ops in block, done for each launch
+            double block_bytes = (nwarps - 1.0) * sizeof(double) * stats.nblocks * 2.0;
+            // total bytes moved
+            bytes = (update_bytes + shuffle_bytes + block_bytes) * stats.steps * stats.cn_steps;
+
+            // flops per update = 12 add + 3 mul + 1 sub + 1 abs
+            double update_flops = (12.0 + 3.0 + 1.0 + 1.0) * stats.in_size;
+            // flops per shuffle = log_2(64) = 6 max ops
+            double shuffle_flops = log2(WARP_SIZE) * stats.nthreads * stats.nblocks * 2.0;
+            // flops per block-tier reduction = nwarps number of max ops
+            double block_flops = nwarps * stats.nblocks * 2.0;
+            // total flops
+            flops = (update_flops + shuffle_flops + block_flops) * stats.steps * stats.cn_steps;
         }
 
         printf("* ==Solver Stats==\n");
 	    print_stats(solve_perf_file, stats, t, bytes, flops);
     }
 
-    // TODO: recompute bytes and flops with profiler
     void diag_stats(const Stats& stats) {
         double t = stats.diag_t;
 
-        // bytes per cell = 1 load for 8 bytes each
-        double bytes = 1.0 * sizeof(double) * stats.out_size * stats.steps; // total bytes
+        // number of warps in block (512 threads per block / 64 = 8)
+        int nwarps = (stats.nthreads + WARP_SIZE - 1) / WARP_SIZE;
 
-        // flops per cell = 1 max + 1 min + 1 add
-        double flops = (1.0 + 1.0 + 1.0) * stats.out_size * stats.steps; // total flops
+        // bytes per grid cell = 1 load of 8 bytes
+        double cell_bytes = 1.0 * sizeof(double) * stats.out_size;
+        // bytes per shuffle = 3 writes of 8 bytes each for first lane of each warp in block
+        double shuffle_bytes = 3.0 * nwarps * sizeof(double) * stats.nblocks;
+        // bytes per block-tier reduction = 3 * (nwarps - 1) number of load ops in block
+        double block_bytes = 3.0 * (nwarps - 1.0) * sizeof(double) * stats.nblocks;
+        // total bytes moved
+        double bytes = (cell_bytes + shuffle_bytes + block_bytes) * stats.steps;
+        
+        // flops per shuffle = 1 max + 1 min + 1 add for log_2(64) iterations
+        double shuffle_flops = (1.0 + 1.0 + 1.0) * log2(WARP_SIZE) * stats.nthreads * stats.nblocks;
+        // flops per block-tier reduction = (1 max + 1 min + 1 add) done nwarps times
+        double block_flops = (1.0 + 1.0 + 1.0) * nwarps * stats.nblocks;
+        // total flops
+        double flops = (shuffle_flops + block_flops) * stats.steps;
 
         printf("* ==Diagnostic Stats==\n");
 	    print_stats(diag_perf_file, stats, t, bytes, flops);

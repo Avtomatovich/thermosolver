@@ -18,7 +18,7 @@
 class Grid
 {
 public:
-    Grid(int N);
+    Grid(int N, Stats& stats);
 
     ~Grid();
 
@@ -52,7 +52,6 @@ private:
 
     // funcs
     void init();
-    void init_d();
 
     inline int idx(int i, int j, int k) {
         // i = slice, j = row, k = col

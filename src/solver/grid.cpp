@@ -11,15 +11,15 @@
 #include <iostream>
 #include <sstream>
 #include "grid.h"
+#include "utils/utils.h"
 #include "utils/timer.h"
 #include "gpu/gpu_func.h"
 
 #define MAX_ITER 100
-#define WARP_SIZE 64 // num of threads in AMD wavefront
 
 using namespace GPUFunc;
 
-Grid::Grid(int N) :
+Grid::Grid(int N, Stats& stats) :
     Ns(N), Nr(N), Nc(N)
 {
     // split [0, 1] domain into N parts, dx = dy = dz
@@ -48,7 +48,29 @@ Grid::Grid(int N) :
     
     init(); // random initial state
 
-    init_d(); // allocate device memory
+    // init execution config
+    block_dim = dim3{8, 8, 8}; // threads per block
+    grid_dim = dim3{ // blocks per grid
+        (Nc + block_dim.x - 1) / block_dim.x, // fastest
+        (Nr + block_dim.y - 1) / block_dim.y,
+        (Ns + block_dim.z - 1) / block_dim.z  // slowest
+    };
+    // shared memory size in bytes to store warp reductions (no of warps = no of threads per block / warp size)
+    shared_bytes = ((block_dim.x * block_dim.y * block_dim.z + WARP_SIZE - 1) / WARP_SIZE) * sizeof(double);
+
+    // update stats with num of threads per block and num of blocks per grid
+    stats.nthreads = block_dim.x * block_dim.y * block_dim.z;
+    stats.nblocks = grid_dim.x * grid_dim.y * grid_dim.z;
+    
+    // allocate device memory
+    // NOTE: size in bytes
+    hipMalloc(reinterpret_cast<void**>(&prev_d), size * sizeof(double));
+    hipMalloc(reinterpret_cast<void**>(&curr_d), size * sizeof(double));
+    hipMalloc(reinterpret_cast<void**>(&res_d), sizeof(double));
+    hipMalloc(reinterpret_cast<void**>(&min_d), sizeof(double));
+    hipMalloc(reinterpret_cast<void**>(&max_d), sizeof(double));
+    hipMalloc(reinterpret_cast<void**>(&total_d), sizeof(double));
+
     to_device(prev, prev_d); // copy prev to device
     to_device(curr, curr_d); // copy curr to device
 }
@@ -79,26 +101,6 @@ void Grid::init() {
             }
         }
     }
-}
-
-void Grid::init_d() {
-    block_dim = dim3{8, 8, 8}; // init execution config
-    grid_dim = dim3{
-        (Nc + block_dim.x - 1) / block_dim.x, // fastest
-        (Nr + block_dim.y - 1) / block_dim.y,
-        (Ns + block_dim.z - 1) / block_dim.z  // slowest
-    };
-    // array size of warp reduction partials (no of warps = no of threads per block / warp size)
-    shared_bytes = ((block_dim.x * block_dim.y * block_dim.z + WARP_SIZE - 1) / WARP_SIZE) * sizeof(double);
-    
-    // NOTE: size in bytes
-    int size = Ns * Nr * Nc * sizeof(double);
-    hipMalloc(reinterpret_cast<void**>(&prev_d), size);
-    hipMalloc(reinterpret_cast<void**>(&curr_d), size);
-    hipMalloc(reinterpret_cast<void**>(&res_d), sizeof(double));
-    hipMalloc(reinterpret_cast<void**>(&min_d), sizeof(double));
-    hipMalloc(reinterpret_cast<void**>(&max_d), sizeof(double));
-    hipMalloc(reinterpret_cast<void**>(&total_d), sizeof(double));
 }
 
 void Grid::ftcs(Stats& stats) {
