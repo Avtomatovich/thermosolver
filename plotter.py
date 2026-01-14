@@ -16,7 +16,7 @@ def roof_line():
     # giga-bytes/sec * FLOPs/byte = GFLOPs/sec, clamp with peak FLOPs
     roofline = [min(peak_flops, peak_bw * ai) for ai in ai_range]
 
-    filenames = ['solve_perf', 'diag_perf']
+    filenames = ['ftcs_perf', 'cn_perf', 'diag_perf']
 
     for filename in filenames:
         csv_filename = 'data/' + filename + '.csv'
@@ -41,30 +41,33 @@ def roof_line():
                 plt.axvline(peak_ai, color="r", linestyle='--', label=f'threshold AI = {peak_ai}')
                 plt.legend()
                 
-                plt.title(filename.split('_')[0].capitalize() + f' Performance at N={n}')
+                title = filename.split('_')[0]
+                title = title.capitalize() if filename == 'diag_perf' else title.upper()
+                
+                plt.title(title + f' Performance at N={n}')               
                 plt.savefig('plots/' + filename)
                 plt.clf()
 
-def energy_plot():
+def temp_plot():
     csv_filename = 'data/diag_data.csv'
     
     if os.path.isfile(csv_filename):
         with open(csv_filename, 'r') as csvfile:
-            time, heat = [], []
+            time, temp = [], []
 
             reader = csv.DictReader(csvfile)
             for row in reader:
                 time.append(int(row['steps']))
-                heat.append(float(row['total']))
+                temp.append(float(row['total']))
             
             plt.xlabel('Time')
-            plt.ylabel('Energy')
+            plt.ylabel('Temperature')
             
-            # plot x=steps, y=energy
-            plt.plot(time, heat, '-r')
+            # plot x=steps, y=temp
+            plt.plot(time, temp, '-r')
             
             plt.title('Heat Diffusion')
-            plt.savefig('plots/energy_plot')
+            plt.savefig('plots/temp_plot')
             plt.clf()
     else:
         print(f'{csv_filename} is not a file')
@@ -106,5 +109,5 @@ def diffuse_anim():
 
 if __name__ == "__main__":
     roof_line()
-    energy_plot()
+    temp_plot()
     diffuse_anim()

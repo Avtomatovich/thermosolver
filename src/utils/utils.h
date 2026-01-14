@@ -19,7 +19,8 @@ namespace Utils {
 
     // NOTE: navigate out of build folder to find csv files
     // performance files
-    const std::string solve_perf_file = "./data/solve_perf.csv";
+    const std::string ftcs_perf_file = "./data/ftcs_perf.csv";
+    const std::string cn_perf_file = "./data/cn_perf.csv";
     const std::string diag_perf_file = "./data/diag_perf.csv";
     // data files
     const std::string diag_data_file = "./data/diag_data.csv";
@@ -29,7 +30,7 @@ namespace Utils {
                     const std::string& line, 
                     std::ios_base::openmode mode);
 
-    void write_head(bool diag_log);
+    void write_head(bool diag_log, Method method);
 
     // stats funcs
     void print_stats(const std::string& file, const Stats& stats, 

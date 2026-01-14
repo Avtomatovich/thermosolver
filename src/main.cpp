@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
         // parse performance toggle if 7 args present
         if (argc >= 7) perf_log = std::stoi(argv[6]);
 
-        if (perf_log) Utils::write_head(diag_log);
+        if (perf_log) Utils::write_head(diag_log, method);
 
         Solver{dim, method, diag_log, perf_log}.solve(nsteps, heat_log);
 
