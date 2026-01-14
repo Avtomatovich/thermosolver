@@ -1,14 +1,22 @@
 ||================================================================||
 ||================= Crank-Nicolson Heat Solver ===================||
 * No of time steps: 1000, Size: 200 x 200 x 200
-* Duration: 3.50245 sec
+* Duration: 8.41577 sec
 * ==Solver Stats==
-	* Time: 3.49412 sec 
-	* FLOPS: 5.61687E+14 flops 
-	* Memory: 3.74458E+15 bytes
-	* Flop Rate: 160752 GF/s 
-	* Bandwidth: 1.07168E+06 GB/s 
-	* AI: 0.15 FLOPS/byte
+	* Time: 3.653 sec 
+	* FLOPS: 9.17407E+11 flops 
+	* Memory: 3.75965E+12 bytes
+	* Flop Rate: 251.138 GF/s 
+	* Bandwidth: 1029.19 GB/s 
+	* AI: 0.244014 FLOPS/byte
+
+* ==Diagnostic Stats==
+	* Time: 4.74606 sec 
+	* FLOPS: 1.44375E+11 flops 
+	* Memory: 6.9625E+10 bytes
+	* Flop Rate: 30.42 GF/s 
+	* Bandwidth: 14.6701 GB/s 
+	* AI: 2.07361 FLOPS/byte
 
 Execution complete.
 HIP Thermosolver job complete.

@@ -62,22 +62,22 @@ namespace Utils {
             int nwarps = (stats.nthreads + WARP_SIZE - 1) / WARP_SIZE;
 
             // bytes per update = 14 load + 1 write for 8 bytes each
-            double update_bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size;
-            // bytes per shuffle = 1 write of 8 bytes for each warp in block, done for each launch
-            double shuffle_bytes = 1.0 * nwarps * sizeof(double) * stats.nblocks * 2.0;
-            // bytes per block-tier reduction = (nwarps - 1) number of load ops in block, done for each launch
-            double block_bytes = (nwarps - 1.0) * sizeof(double) * stats.nblocks * 2.0;
-            // total bytes moved
-            bytes = (update_bytes + shuffle_bytes + block_bytes) * stats.steps * stats.cn_steps;
+            double update_bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size * stats.cn_steps;
+            // bytes per shuffle = 1 write of 8 bytes for each warp in block for 2 launches
+            double shuffle_bytes = 1.0 * sizeof(double) * nwarps * stats.nblocks * 2.0 * stats.cn_steps;
+            // bytes per block-tier reduction = (nwarps - 1) number of load ops in block for 2 launches
+            double block_bytes = (nwarps - 1.0) * sizeof(double) * stats.nblocks * 2.0 * stats.cn_steps;
+            // total bytes
+            bytes = update_bytes + shuffle_bytes + block_bytes;
 
             // flops per update = 12 add + 3 mul + 1 sub + 1 abs
-            double update_flops = (12.0 + 3.0 + 1.0 + 1.0) * stats.in_size;
+            double update_flops = (12.0 + 3.0 + 1.0 + 1.0) * stats.in_size * stats.cn_steps;
             // flops per shuffle = log_2(64) = 6 max ops
-            double shuffle_flops = log2(WARP_SIZE) * stats.nthreads * stats.nblocks * 2.0;
+            double shuffle_flops = log2(WARP_SIZE) * stats.nthreads * stats.nblocks * 2.0 * stats.cn_steps;
             // flops per block-tier reduction = nwarps number of max ops
-            double block_flops = nwarps * stats.nblocks * 2.0;
+            double block_flops = nwarps * stats.nblocks * 2.0 * stats.cn_steps;
             // total flops
-            flops = (update_flops + shuffle_flops + block_flops) * stats.steps * stats.cn_steps;
+            flops = update_flops + shuffle_flops + block_flops;
         }
 
         printf("* ==Solver Stats==\n");
@@ -91,20 +91,20 @@ namespace Utils {
         int nwarps = (stats.nthreads + WARP_SIZE - 1) / WARP_SIZE;
 
         // bytes per grid cell = 1 load of 8 bytes
-        double cell_bytes = 1.0 * sizeof(double) * stats.out_size;
+        double cell_bytes = 1.0 * sizeof(double) * stats.out_size * stats.steps;
         // bytes per shuffle = 3 writes of 8 bytes each for first lane of each warp in block
-        double shuffle_bytes = 3.0 * nwarps * sizeof(double) * stats.nblocks;
+        double shuffle_bytes = 3.0 * sizeof(double) * nwarps * stats.nblocks * stats.steps;
         // bytes per block-tier reduction = 3 * (nwarps - 1) number of load ops in block
-        double block_bytes = 3.0 * (nwarps - 1.0) * sizeof(double) * stats.nblocks;
-        // total bytes moved
-        double bytes = (cell_bytes + shuffle_bytes + block_bytes) * stats.steps;
+        double block_bytes = 3.0 * (nwarps - 1.0) * sizeof(double) * stats.nblocks * stats.steps;
+        // total bytes
+        double bytes = cell_bytes + shuffle_bytes + block_bytes;
         
         // flops per shuffle = 1 max + 1 min + 1 add for log_2(64) iterations
-        double shuffle_flops = (1.0 + 1.0 + 1.0) * log2(WARP_SIZE) * stats.nthreads * stats.nblocks;
-        // flops per block-tier reduction = (1 max + 1 min + 1 add) done nwarps times
-        double block_flops = (1.0 + 1.0 + 1.0) * nwarps * stats.nblocks;
+        double shuffle_flops = (1.0 + 1.0 + 1.0) * log2(WARP_SIZE) * stats.nthreads * stats.nblocks * stats.steps;
+        // flops per block-tier reduction = (1 max + 1 min + 1 add) repeated nwarps times
+        double block_flops = (1.0 + 1.0 + 1.0) * nwarps * stats.nblocks * stats.steps;
         // total flops
-        double flops = (shuffle_flops + block_flops) * stats.steps;
+        double flops = shuffle_flops + block_flops;
 
         printf("* ==Diagnostic Stats==\n");
 	    print_stats(diag_perf_file, stats, t, bytes, flops);
