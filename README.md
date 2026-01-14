@@ -202,8 +202,7 @@ Kudos if you followed all of that.
 
 This plot displays the general decrease of temperature across the grid as the heat diffuses over 1000 timesteps, which has been normalized to range from 0 to 1 for each randomly initialized grid point. FTCS was used to generate this data due to its quick simulation of runs with a low number of timesteps.
 
-<!-- TODO: replace energy plot with temperature plot -->
-<!-- ![A line graph showing temperature decreasing over time.](plots/temp_plot.png) -->
+![A line graph showing temperature decreasing over time.](plots/temp_plot.png)
 
 Below is a table of runtime durations for FTCS and Crank-Nicolson over 1000 timesteps on a randomly initialized grid:
 
@@ -223,9 +222,22 @@ This OpenMP implementation of FTCS provides considerable speedups by a factor of
 
 ### Roofline
 
-For the roofline analysis, this section will focus solely on the HIP implementation. All runs were performed for 1000 timesteps on a grid size of $100^3$ using an AMD MI210 GPU with a peak FP64 (double-precision) flop rate of 45.3 TFLOPs and a peak bandwidth of 1.6 TB/sec.
+For the roofline analysis, all runs were performed for 1000 timesteps on a grid size of $100^3$ using an AMD MI210 GPU with a peak FP64 (double-precision) flop rate of 45.3 TFLOPs and a peak bandwidth of 1.6 TB/sec.
 
-| FTCS | Crank-Nicolson | Diagnostics |
-| :--: | :------------: | :---------: |
-<!-- TODO: add ftcs_perf.png and cn_perf.png from other branches -->
-<!-- | ![FTCS roofline.](plots/ftcs_perf.png) | ![CN roofline.](plots/cn_perf.png) | ![Diagnostics roofline.](plots/diag_perf.png) | -->
+To preface this, stencil-based solvers like Thermosolver are usually memory-bound, meaning that higher performance is held back by the number of bytes moved during each kernel launch.
+
+Both the serial and OMP versions of FTCS and Crank-Nicolson have arithmetic intensities (AI) of 0.125 and 0.15 respectively. The higher AI for the latter can be attributed to the RBGS iterations for each timestep.
+
+Below is a comparison of the FTCS and Crank-Nicolson roofline models in the HIP implementation.
+
+| FTCS | Crank-Nicolson |
+| :--: | :------------: |
+| ![FTCS roofline.](plots/ftcs_perf.png) | ![CN roofline.](plots/cn_perf.png) |
+
+After GPU offloading, FTCS still retains an AI of 0.125 since the kernel is monolithic, i.e. each GPU thread has a one-to-one mapping with each grid point, so the bytes moved and flops scale up proportionally.
+
+However, Crank-Nicolson includes GPU reductions, and so the AI for the implementation is influenced by the number of RBGS iterations (which requires two kernel launches to complete one pass) and the number of threads launched since all threads take part in the reduction process. This results in a higher AI than that of FTCS.
+
+Observing the diagnostics kernel's performance, the three reductions for the minimum temperature, maximum temperature, and sum of all temperatures take center stage in computations, since it is roughly 1 memory loading operation for every 3 FLOPs per grid cell. Accounting for the GPU computations, it results in the highest AI from all 3 kernels (FTCS, Crank-Nicolson, and diagnostics), clocking in around ~2 at varying grid sizes.
+
+![Diagnostics roofline.](plots/diag_perf.png)
