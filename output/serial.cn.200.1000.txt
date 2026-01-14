@@ -1,37 +1,14 @@
 ||================================================================||
 ||================= Crank-Nicolson Heat Solver ===================||
 * No of time steps: 1000, Size: 200 x 200 x 200
-* Duration: 178.495 sec
+* Duration: 185.822 sec
 * ==Solver Stats==
-	* Time: 178.494 sec 
-	* FLOPS: 5.61687E+14 flops 
-	* Memory: 3.74458E+15 bytes
-	* Flop Rate: 3146.8 GF/s 
-	* Bandwidth: 20978.7 GB/s 
+	* Time: 185.821 sec 
+	* FLOPS: 5.61687E+11 flops 
+	* Memory: 3.74458E+12 bytes
+	* Flop Rate: 3.02273 GF/s 
+	* Bandwidth: 20.1515 GB/s 
 	* AI: 0.15 FLOPS/byte
 
 Execution complete.
 Serial Thermosolver job complete.
-
-----------------------------------------------------------------------
-Omnistat Report Card for Job Id: 260512
-----------------------------------------------------------------------
-
-Job Overview (Num Nodes = 1, Machine = HPC Fund)
- --> Start time = 2026-01-13 14:46:43
- --> End   time = 2026-01-13 14:52:13
- --> Duration   = 330 secs
-
-GPU Statistics:
-
-           | Utilization (%)  |  Memory Use (%)  | Temperature (C)  |    Power (W)     | Energy (kWh) |
-     GPU # |    Max     Mean  |    Max     Mean  |    Max     Mean  |    Max     Mean  |    Total     |
-    ---------------------------------------------------------------------------------------------------
-         0 |    0.00    0.00  |    0.02    0.02  |   39.00   38.33  |   41.00   41.00  |   3.76e-03   |
-
-Approximate Total GPU Energy Consumed = 3.76e-03 kWh
-
---
-Query interval = 30.000 secs
-Query execution time = 0.1 secs
-Version = 1.8.0

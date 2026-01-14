@@ -61,10 +61,10 @@ namespace Utils {
                 break;
             case Method::CN:
                 // bytes per cell = 14 load + 1 write for 8 bytes each
-                bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size * stats.steps * stats.cn_steps;
+                bytes = (14.0 + 1.0) * sizeof(double) * stats.in_size * stats.cn_steps;
 
-                // flops per cell = 12 add + 3 mul + 1 sub + 1 max + 1 abs
-                flops = (12.0 + 3.0 + 1.0 + 1.0 + 1.0) * stats.in_size * stats.steps * stats.cn_steps;
+                // flops per cell = 12 add + 3 mul + 1 max + 1 sub + 1 abs
+                flops = (12.0 + 3.0 + 1.0 + 1.0 + 1.0) * stats.in_size * stats.cn_steps;
                 break;
         }
 

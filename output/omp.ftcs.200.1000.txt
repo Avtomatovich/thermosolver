@@ -1,14 +1,14 @@
 ||================================================================||
-||================= Crank-Nicolson Heat Solver ===================||
+||============ Forward Time-Centered Space Heat Solver ===========||
 * No of time steps: 1000, Size: 200 x 200 x 200
-* Duration: 33.6426 sec
+* Duration: 2.13885 sec
 * ==Solver Stats==
-	* Time: 33.6423 sec 
-	* FLOPS: 5.61687E+14 flops 
-	* Memory: 3.74458E+15 bytes
-	* Flop Rate: 16695.9 GF/s 
-	* Bandwidth: 111306 GB/s 
-	* AI: 0.15 FLOPS/byte
+	* Time: 2.13861 sec 
+	* FLOPS: 6.20991E+10 flops 
+	* Memory: 4.96793E+11 bytes
+	* Flop Rate: 29.0371 GF/s 
+	* Bandwidth: 232.297 GB/s 
+	* AI: 0.125 FLOPS/byte
 
 Execution complete.
 OpenMP Thermosolver job complete.

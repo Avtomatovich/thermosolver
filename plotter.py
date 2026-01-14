@@ -23,7 +23,8 @@ def roof_line():
         
         if os.path.isfile(csv_filename):
             with open(csv_filename, 'r') as csvfile:
-                ai = float(next(csv.DictReader(csvfile))['arithmetic_intensity'])
+                row = next(csv.DictReader(csvfile))
+                n, ai = int(row['size']), float(row['arithmetic_intensity'])
 
                 plt.xscale('log', base=2)
                 plt.yscale('log', base=2)
@@ -40,7 +41,7 @@ def roof_line():
                 plt.axvline(peak_ai, color="r", linestyle='--', label=f'threshold AI = {peak_ai}')
                 plt.legend()
                 
-                plt.title(filename.replace('_', ' ').capitalize())
+                plt.title(filename.split('_')[0].capitalize() + f' Performance at N={n}')
                 plt.savefig('plots/' + filename)
                 plt.clf()
 
@@ -101,7 +102,7 @@ def diffuse_anim():
     
     anim = FuncAnimation(fig, frame, frames)
 
-    anim.save('plots/heat_diffuse.gif', writer=PillowWriter(fps=8))
+    anim.save('plots/heat_diffuse.gif', writer=PillowWriter(fps=5))
 
 if __name__ == "__main__":
     roof_line()

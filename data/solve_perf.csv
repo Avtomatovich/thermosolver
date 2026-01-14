@@ -1,2 +1,2 @@
 size,steps,time,flop_rate,arithmetic_intensity,bandwidth
-100,1000,0.19299,39.0151,0.125,312.121
+100,1000,0.152274,49.4471,0.125,395.577
