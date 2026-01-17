@@ -170,13 +170,13 @@ Crank-Nicolson is great because it is a stable method, and so does not need to e
 
 Now the fact remains that an iterative solution is needed to know the values of $u$ at $t+1$. The solver uses the __Red-Black Gauss-Seidel (RBGS)__ method for that purpose, a parallel-friendly iterative technique which utilizes the latest updated values in the grid to update the upcoming ones, but it is done in a two-pass checkerboard pattern to avoid race conditions. The first pass handles the red grid cells, and the second pass handles the black grid cells, hence the name.
 
-These linear solving iterations continue until the maximum absolute difference of grid values from the past and present iteration indicate convergence to a settled solution. This would occur at each time step, a computationally expensive process.
+These linear solving iterations continue until the maximum absolute difference of grid values from the past and present iteration indicate convergence to a settled solution. This would occur at each time step, a computationally expensive process. This leads to the next optimization.
 
 ## Parallelization
 
 We can parallelize the solver by invoking OpenMP directives at hotspots in the code. The main hotspots are the triple nested for loops that iterate through the grid to interact with each grid cells for initialization, diagnostics, etc. One such recurring directive is `#pragma omp parallel for`. This essentially launches a swarm of threads that would each work on a different part of the grid at the same time.
 
-OpenMP is meant to be used with CPUs and launches a limited number of threads, but GPUs 10x more threads available to put to work. Using HIP, the code contains GPU versions of the serial functions called _kernels_, which would define a single GPU thread's instructions.
+OpenMP is meant to be used with CPUs and launches a limited number of threads, but GPUs have 10x more threads available to put to work. Using HIP, the code contains GPU versions of the serial functions called _kernels_, which would define a single GPU thread's instructions.
 
 ### Reduction
 
